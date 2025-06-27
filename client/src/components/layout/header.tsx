@@ -19,6 +19,7 @@ const pageNames: Record<string, string> = {
   "/payments": "Payments",
   "/inventory": "Medicine Inventory",
   "/rooms": "Room Management",
+  "/settings": "Admin Settings",
 };
 
 const pageDescriptions: Record<string, string> = {

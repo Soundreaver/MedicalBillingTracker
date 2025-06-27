@@ -12,6 +12,7 @@ import Billing from "@/pages/billing";
 import Payments from "@/pages/payments";
 import Inventory from "@/pages/inventory";
 import Rooms from "@/pages/rooms";
+import Settings from "@/pages/settings";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
@@ -51,6 +52,7 @@ function Router() {
         <Route path="/payments" component={Payments} />
         <Route path="/inventory" component={Inventory} />
         <Route path="/rooms" component={Rooms} />
+        <Route path="/settings" component={Settings} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>
