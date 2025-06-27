@@ -47,7 +47,12 @@ export default function Inventory() {
     },
   });
 
-  const categories = [...new Set(medicines.map(m => m.category).filter(Boolean))];
+  const categories = medicines.reduce((acc: string[], medicine) => {
+    if (medicine.category && !acc.includes(medicine.category)) {
+      acc.push(medicine.category);
+    }
+    return acc;
+  }, []);
   
   const filteredMedicines = medicines.filter(medicine => {
     const matchesSearch = medicine.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -91,7 +96,10 @@ export default function Inventory() {
           <h1 className="text-2xl font-bold text-professional-dark">Medicine Inventory</h1>
           <p className="text-gray-600">Monitor medicine stock and inventory levels</p>
         </div>
-        <Button className="bg-medical-teal hover:bg-medical-teal/90">
+        <Button 
+          className="bg-medical-teal hover:bg-medical-teal/90"
+          onClick={() => setIsAddMedicineModalOpen(true)}
+        >
           <Plus className="mr-2" size={16} />
           Add Medicine
         </Button>
@@ -208,7 +216,7 @@ export default function Inventory() {
               >
                 <option value="all">All Categories</option>
                 {categories.map(category => (
-                  <option key={category} value={category}>{category}</option>
+                  <option key={category} value={category || ""}>{category}</option>
                 ))}
               </select>
             </div>
@@ -297,6 +305,11 @@ export default function Inventory() {
           )}
         </CardContent>
       </Card>
+
+      <AddMedicineModal 
+        isOpen={isAddMedicineModalOpen}
+        onClose={() => setIsAddMedicineModalOpen(false)}
+      />
     </div>
   );
 }
