@@ -212,7 +212,7 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-1 max-h-[50vh]">
+        <div className="flex-1 overflow-y-scroll px-1 max-h-[40vh] border border-gray-200 rounded scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
           <div className="py-6 space-y-6 pr-4">
             {/* Room Details */}
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
