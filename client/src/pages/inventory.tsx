@@ -184,9 +184,6 @@ export default function Inventory() {
                     </Badge>
                   </div>
                   <p className="text-sm text-gray-600 mb-3">{medicine.category}</p>
-                  <Button size="sm" className="w-full bg-urgent-red hover:bg-urgent-red/90">
-                    Reorder Now
-                  </Button>
                 </div>
               ))}
             </div>
