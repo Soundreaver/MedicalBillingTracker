@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Eye, CreditCard, Download } from "lucide-react";
+import { Search, Plus, Eye, CreditCard, Download, Edit } from "lucide-react";
 import { formatCurrency, formatDate, getInitials, getDaysOverdue, getStatusColor } from "@/lib/utils";
 import { generateInvoicePDF } from "@/lib/pdf-generator";
 import { InvoiceWithDetails } from "@shared/schema";
 import InvoiceModal from "@/components/modals/invoice-modal";
 import PaymentModal from "@/components/modals/payment-modal";
 import CreateInvoiceModal from "@/components/modals/create-invoice-modal";
+import EditInvoiceModal from "@/components/modals/edit-invoice-modal";
 
 export default function Billing() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -20,6 +21,7 @@ export default function Billing() {
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showCreateInvoice, setShowCreateInvoice] = useState(false);
+  const [showEditInvoice, setShowEditInvoice] = useState(false);
 
   const { data: invoices = [], isLoading } = useQuery<InvoiceWithDetails[]>({
     queryKey: ["/api/invoices"],
@@ -44,6 +46,11 @@ export default function Billing() {
 
   const handleDownloadPDF = (invoice: InvoiceWithDetails) => {
     generateInvoicePDF(invoice);
+  };
+
+  const handleEditInvoice = (invoice: InvoiceWithDetails) => {
+    setSelectedInvoice(invoice);
+    setShowEditInvoice(true);
   };
 
   const getInvoiceStatus = (invoice: InvoiceWithDetails) => {

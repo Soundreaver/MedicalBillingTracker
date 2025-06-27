@@ -40,6 +40,7 @@ export interface IStorage {
   getInvoiceByNumber(invoiceNumber: string): Promise<InvoiceWithDetails | undefined>;
   createInvoice(invoice: InsertInvoice, items: InsertInvoiceItem[]): Promise<InvoiceWithDetails>;
   updateInvoice(id: number, invoice: Partial<InsertInvoice>): Promise<Invoice | undefined>;
+  updateInvoiceWithItems(id: number, data: { totalAmount?: string; description?: string; items?: InsertInvoiceItem[] }): Promise<InvoiceWithDetails | undefined>;
   getOutstandingInvoices(): Promise<InvoiceWithDetails[]>;
   getPatientInvoices(patientId: number): Promise<InvoiceWithDetails[]>;
 
@@ -236,6 +237,58 @@ export class DatabaseStorage implements IStorage {
   async updateInvoice(id: number, invoice: Partial<InsertInvoice>): Promise<Invoice | undefined> {
     const [updated] = await db.update(invoices).set(invoice).where(eq(invoices.id, id)).returning();
     return updated || undefined;
+  }
+
+  async updateInvoiceWithItems(id: number, data: { totalAmount?: string; description?: string; items?: InsertInvoiceItem[] }): Promise<InvoiceWithDetails | undefined> {
+    // Update the invoice basic info
+    const updates: Partial<InsertInvoice> = {};
+    if (data.totalAmount) updates.totalAmount = data.totalAmount;
+    if (data.description !== undefined) updates.description = data.description;
+    
+    if (Object.keys(updates).length > 0) {
+      await db.update(invoices).set(updates).where(eq(invoices.id, id));
+    }
+
+    // If items are provided, replace all existing items
+    if (data.items) {
+      // First, get original items to restore medicine stock
+      const originalItems = await db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, id));
+      
+      // Restore medicine stock from original items
+      for (const item of originalItems) {
+        if (item.itemType === 'medicine' && item.itemId) {
+          const [currentMedicine] = await db.select().from(medicines).where(eq(medicines.id, item.itemId));
+          if (currentMedicine) {
+            const restoredStock = currentMedicine.stockQuantity + item.quantity;
+            await db.update(medicines)
+              .set({ stockQuantity: restoredStock })
+              .where(eq(medicines.id, item.itemId));
+          }
+        }
+      }
+
+      // Delete existing items
+      await db.delete(invoiceItems).where(eq(invoiceItems.invoiceId, id));
+
+      // Insert new items
+      const invoiceItemsWithId = data.items.map(item => ({ ...item, invoiceId: id }));
+      await db.insert(invoiceItems).values(invoiceItemsWithId);
+
+      // Update medicine stock for new items
+      for (const item of data.items) {
+        if (item.itemType === 'medicine' && item.itemId) {
+          const [currentMedicine] = await db.select().from(medicines).where(eq(medicines.id, item.itemId));
+          if (currentMedicine) {
+            const newStock = currentMedicine.stockQuantity - item.quantity;
+            await db.update(medicines)
+              .set({ stockQuantity: Math.max(0, newStock) })
+              .where(eq(medicines.id, item.itemId));
+          }
+        }
+      }
+    }
+
+    return this.getInvoice(id);
   }
 
   async getOutstandingInvoices(): Promise<InvoiceWithDetails[]> {

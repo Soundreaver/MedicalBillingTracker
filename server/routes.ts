@@ -471,6 +471,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  const updateInvoiceSchema = z.object({
+    totalAmount: z.string().optional(),
+    description: z.string().optional(),
+    items: z.array(insertInvoiceItemSchema).optional(),
+  });
+
+  app.put("/api/invoices/:id", authenticate, requireDoctorOrAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const result = updateInvoiceSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid invoice data", errors: result.error.errors });
+      }
+      
+      const invoice = await storage.updateInvoiceWithItems(id, result.data);
+      if (!invoice) {
+        return res.status(404).json({ message: "Invoice not found" });
+      }
+      res.json(invoice);
+    } catch (error) {
+      console.error("Error updating invoice:", error);
+      res.status(500).json({ message: "Failed to update invoice" });
+    }
+  });
+
   // Payments
   app.get("/api/payments", authenticate, async (req, res) => {
     try {
