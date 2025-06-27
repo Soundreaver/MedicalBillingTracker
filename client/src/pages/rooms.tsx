@@ -4,18 +4,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Bed, Users, CheckCircle, XCircle } from "lucide-react";
+import { Search, Plus, Bed, Users, CheckCircle, XCircle, UserPlus } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { Room, RoomOccupancy, Patient } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import AddRoomModal from "@/components/modals/add-room-modal";
+import AssignPatientModal from "@/components/modals/assign-patient-modal";
 
 export default function Rooms() {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isAddRoomModalOpen, setIsAddRoomModalOpen] = useState(false);
+  const [selectedRoomForAssignment, setSelectedRoomForAssignment] = useState<Room | null>(null);
   const { toast } = useToast();
 
   const { data: rooms = [], isLoading } = useQuery<Room[]>({
@@ -297,6 +299,18 @@ export default function Rooms() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">
+                        {!room.isOccupied && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedRoomForAssignment(room)}
+                            disabled={updateRoomMutation.isPending}
+                            className="text-medical-teal hover:text-medical-teal/80"
+                          >
+                            <UserPlus className="mr-1" size={14} />
+                            Assign Patient
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
@@ -338,6 +352,15 @@ export default function Rooms() {
         isOpen={isAddRoomModalOpen}
         onClose={() => setIsAddRoomModalOpen(false)}
       />
+      
+      {selectedRoomForAssignment && (
+        <AssignPatientModal
+          room={selectedRoomForAssignment}
+          patients={patients}
+          isOpen={!!selectedRoomForAssignment}
+          onClose={() => setSelectedRoomForAssignment(null)}
+        />
+      )}
     </div>
   );
 }
