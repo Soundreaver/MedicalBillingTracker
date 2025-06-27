@@ -4,12 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Package, AlertTriangle, Edit, TrendingDown } from "lucide-react";
+import { Search, Plus, Package, AlertTriangle, Edit, TrendingDown, Upload } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { Medicine } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import AddMedicineModal from "@/components/modals/add-medicine-modal";
+import BulkImportModal from "@/components/modals/bulk-import-modal";
 
 export default function Inventory() {
   const [searchTerm, setSearchTerm] = useState("");

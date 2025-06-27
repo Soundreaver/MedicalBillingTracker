@@ -9,6 +9,26 @@ import {
   loginSchema, updateUserSchema, changePasswordSchema
 } from "@shared/schema";
 import { z } from "zod";
+import multer from "multer";
+import * as XLSX from "xlsx";
+
+// Configure multer for file uploads
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel',
+      'text/csv'
+    ];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only Excel (.xlsx, .xls) and CSV files are allowed'));
+    }
+  }
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Seed users on startup (keeping login credentials)
@@ -217,6 +237,132 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(medicine);
     } catch (error) {
       res.status(500).json({ message: "Failed to update medicine" });
+    }
+  });
+
+  // Bulk medicine import endpoints
+  app.post("/api/medicines/parse-excel", authenticate, requireDoctorOrAdmin, upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      // Parse Excel file
+      const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+      if (jsonData.length === 0) {
+        return res.status(400).json({ message: "Excel file is empty" });
+      }
+
+      // Parse and validate medicine data
+      const parsedMedicines = [];
+      const errors = [];
+
+      for (let i = 0; i < jsonData.length; i++) {
+        const row = jsonData[i] as any;
+        const rowIndex = i + 2; // Excel row number (1-indexed + header)
+
+        try {
+          // Map Excel columns to medicine schema
+          const medicineData = {
+            name: row['Medicine Name'] || row['name'] || row['Name'],
+            category: row['Category'] || row['category'],
+            unitPrice: (row['Unit Price'] || row['unitPrice'] || row['Price'] || row['price'])?.toString(),
+            stockQuantity: parseInt(row['Stock Quantity'] || row['stockQuantity'] || row['Stock'] || row['stock'] || '0'),
+            lowStockThreshold: parseInt(row['Low Stock Threshold'] || row['lowStockThreshold'] || row['Threshold'] || '10'),
+            unit: row['Unit'] || row['unit'] || 'pieces'
+          };
+
+          // Validate the medicine data
+          const result = insertMedicineSchema.safeParse(medicineData);
+          if (!result.success) {
+            errors.push({
+              row: rowIndex,
+              data: medicineData,
+              errors: result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
+            });
+          } else {
+            parsedMedicines.push({
+              row: rowIndex,
+              data: result.data
+            });
+          }
+        } catch (error) {
+          errors.push({
+            row: rowIndex,
+            data: row,
+            errors: [`Failed to parse row: ${error instanceof Error ? error.message : 'Unknown error'}`]
+          });
+        }
+      }
+
+      res.json({
+        success: true,
+        totalRows: jsonData.length,
+        validMedicines: parsedMedicines,
+        errors: errors,
+        message: `Parsed ${parsedMedicines.length} valid medicines out of ${jsonData.length} rows`
+      });
+
+    } catch (error) {
+      console.error("Excel parsing error:", error);
+      res.status(500).json({ 
+        message: "Failed to parse Excel file", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  app.post("/api/medicines/bulk-import", authenticate, requireDoctorOrAdmin, async (req, res) => {
+    try {
+      const { medicines } = req.body;
+      
+      if (!Array.isArray(medicines) || medicines.length === 0) {
+        return res.status(400).json({ message: "No medicines to import" });
+      }
+
+      const createdMedicines = [];
+      const errors = [];
+
+      for (const medicineData of medicines) {
+        try {
+          const result = insertMedicineSchema.safeParse(medicineData);
+          if (!result.success) {
+            errors.push({
+              data: medicineData,
+              errors: result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
+            });
+            continue;
+          }
+
+          const medicine = await storage.createMedicine(result.data);
+          createdMedicines.push(medicine);
+        } catch (error) {
+          errors.push({
+            data: medicineData,
+            errors: [error instanceof Error ? error.message : 'Unknown error']
+          });
+        }
+      }
+
+      res.json({
+        success: true,
+        imported: createdMedicines.length,
+        total: medicines.length,
+        createdMedicines,
+        errors,
+        message: `Successfully imported ${createdMedicines.length} out of ${medicines.length} medicines`
+      });
+
+    } catch (error) {
+      console.error("Bulk import error:", error);
+      res.status(500).json({ 
+        message: "Failed to import medicines", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 

@@ -1,16 +1,16 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { 
-  BarChart3, 
-  Users, 
-  FileText, 
-  CreditCard, 
-  PillBottle, 
-  Bed, 
-  ChartBar, 
-  Settings, 
+import {
+  BarChart3,
+  Users,
+  FileText,
+  CreditCard,
+  PillBottle,
+  Bed,
+  ChartBar,
+  Settings,
   LogOut,
-  Hospital
+  Hospital,
 } from "lucide-react";
 
 const mainMenuItems = [
@@ -22,9 +22,7 @@ const mainMenuItems = [
   { path: "/rooms", label: "Room Management", icon: Bed },
 ];
 
-const accountItems = [
-  { path: "/settings", label: "Settings", icon: Settings },
-];
+const accountItems = [{ path: "/settings", label: "Settings", icon: Settings }];
 
 export default function Sidebar() {
   const [location] = useLocation();
@@ -37,27 +35,34 @@ export default function Sidebar() {
             <Hospital className="text-white" size={20} />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-professional-dark">MedBill Pro</h1>
+            <h1 className="text-xl font-bold text-professional-dark">
+              Mirror Hospital
+            </h1>
             <p className="text-sm text-gray-500">Billing Management</p>
           </div>
         </div>
       </div>
-      
+
       <nav className="mt-6">
         <div className="px-6">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Main Menu</p>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            Main Menu
+          </p>
         </div>
         <div className="mt-4 space-y-1">
           {mainMenuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location === item.path;
-            
+
             return (
               <Link key={item.path} href={item.path}>
-                <div className={cn(
-                  "flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-medical-teal transition-colors cursor-pointer relative",
-                  isActive && "text-medical-teal bg-medical-teal/10 border-r-4 border-medical-teal font-semibold"
-                )}>
+                <div
+                  className={cn(
+                    "flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-medical-teal transition-colors cursor-pointer relative",
+                    isActive &&
+                      "text-medical-teal bg-medical-teal/10 border-r-4 border-medical-teal font-semibold",
+                  )}
+                >
                   <Icon className="mr-3" size={18} />
                   <span className="font-medium truncate">{item.label}</span>
                 </div>
@@ -65,14 +70,16 @@ export default function Sidebar() {
             );
           })}
         </div>
-        
+
         <div className="px-6 mt-8">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Account</p>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            Account
+          </p>
         </div>
         <div className="mt-4 space-y-1">
           {accountItems.map((item) => {
             const Icon = item.icon;
-            
+
             return (
               <Link key={item.path} href={item.path}>
                 <div className="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-medical-teal transition-colors cursor-pointer">
