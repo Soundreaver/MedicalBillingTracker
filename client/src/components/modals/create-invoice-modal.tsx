@@ -82,7 +82,7 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
       const invoiceData = {
         ...data.invoice,
         totalAmount: parseFloat(data.invoice.totalAmount),
-        paidAmount: parseFloat(data.invoice.paidAmount),
+        paidAmount: parseFloat(data.invoice.paidAmount || "0"),
       };
 
       const itemsData = data.items.map(item => ({
