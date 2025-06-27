@@ -50,7 +50,12 @@ export default function Rooms() {
     },
   });
 
-  const roomTypes = [...new Set(rooms.map(r => r.roomType))];
+  const roomTypes = rooms.reduce((acc: string[], room) => {
+    if (!acc.includes(room.roomType)) {
+      acc.push(room.roomType);
+    }
+    return acc;
+  }, []);
   
   const filteredRooms = rooms.filter(room => {
     const matchesSearch = room.roomNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -83,11 +88,11 @@ export default function Rooms() {
     .reduce((sum, room) => sum + parseFloat(room.dailyRate), 0);
 
   if (isLoading) {
-    return <div className="p-8 flex justify-center">Loading...</div>;
+    return <div className="flex justify-center">Loading...</div>;
   }
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-professional-dark">Room Management</h1>

@@ -35,10 +35,15 @@ export default function Payments() {
   });
 
   const totalPayments = filteredPayments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
-  const paymentMethods = [...new Set(payments.map(p => p.paymentMethod))];
+  const paymentMethods = payments.reduce((acc: string[], payment) => {
+    if (!acc.includes(payment.paymentMethod)) {
+      acc.push(payment.paymentMethod);
+    }
+    return acc;
+  }, []);
 
   if (paymentsLoading) {
-    return <div className="p-8 flex justify-center">Loading...</div>;
+    return <div className="flex justify-center">Loading...</div>;
   }
 
   return (
