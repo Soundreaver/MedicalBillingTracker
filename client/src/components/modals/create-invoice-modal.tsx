@@ -205,16 +205,11 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="border-b pb-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <DialogTitle className="text-xl font-bold text-professional-dark">
-                Create New Invoice
-              </DialogTitle>
-              <p className="text-gray-600 mt-1">Generate invoice for patient services</p>
-            </div>
-            <Button variant="ghost" size="icon" onClick={handleClose}>
-              <X size={16} />
-            </Button>
+          <div>
+            <DialogTitle className="text-xl font-bold text-professional-dark">
+              Create New Invoice
+            </DialogTitle>
+            <p className="text-gray-600 mt-1">Generate invoice for patient services</p>
           </div>
         </DialogHeader>
 
