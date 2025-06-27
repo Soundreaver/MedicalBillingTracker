@@ -30,7 +30,6 @@ const createInvoiceFormSchema = z.object({
   invoice: insertInvoiceSchema.extend({
     totalAmount: z.string().min(1, "Total amount is required"),
   }),
-  items: z.array(invoiceItemSchema).min(1, "At least one item is required"),
 });
 
 type CreateInvoiceFormData = z.infer<typeof createInvoiceFormSchema>;
@@ -73,7 +72,6 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
         dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
         description: "",
       },
-      items: [],
     },
   });
 
@@ -160,6 +158,15 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
   };
 
   const onSubmit = async (data: CreateInvoiceFormData) => {
+    console.log("Form submit triggered with data:", data);
+    console.log("Items array:", items);
+    console.log("Form errors:", form.formState.errors);
+    
+    if (items.length === 0) {
+      console.log("No items, cannot submit");
+      return;
+    }
+
     const formattedItems = items.map(item => ({
       itemType: item.itemType,
       itemId: item.itemId,
@@ -170,6 +177,15 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
     }));
 
     const total = calculateTotal();
+    
+    console.log("Submitting invoice:", {
+      invoice: {
+        ...data.invoice,
+        totalAmount: total,
+        paidAmount: parseFloat(data.invoice.paidAmount || "0"),
+      },
+      items: formattedItems,
+    });
     
     await createInvoiceMutation.mutateAsync({
       invoice: {
@@ -437,7 +453,13 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
                 Cancel
               </Button>
               <Button 
-                type="submit" 
+                type="button" 
+                onClick={() => {
+                  console.log("Button clicked!");
+                  console.log("Items:", items);
+                  console.log("Form values:", form.getValues());
+                  form.handleSubmit(onSubmit)();
+                }}
                 disabled={items.length === 0 || createInvoiceMutation.isPending}
                 className="bg-medical-teal hover:bg-medical-teal/90"
               >
