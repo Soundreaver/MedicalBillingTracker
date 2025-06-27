@@ -9,11 +9,13 @@ import { formatCurrency } from "@/lib/utils";
 import { Room, RoomOccupancy, Patient } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import AddRoomModal from "@/components/modals/add-room-modal";
 
 export default function Rooms() {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [isAddRoomModalOpen, setIsAddRoomModalOpen] = useState(false);
   const { toast } = useToast();
 
   const { data: rooms = [], isLoading } = useQuery<Room[]>({
@@ -98,7 +100,10 @@ export default function Rooms() {
           <h1 className="text-2xl font-bold text-professional-dark">Room Management</h1>
           <p className="text-gray-600">Manage room occupancy and charges</p>
         </div>
-        <Button className="bg-medical-teal hover:bg-medical-teal/90">
+        <Button 
+          className="bg-medical-teal hover:bg-medical-teal/90"
+          onClick={() => setIsAddRoomModalOpen(true)}
+        >
           <Plus className="mr-2" size={16} />
           Add Room
         </Button>
@@ -328,6 +333,11 @@ export default function Rooms() {
           )}
         </CardContent>
       </Card>
+
+      <AddRoomModal
+        isOpen={isAddRoomModalOpen}
+        onClose={() => setIsAddRoomModalOpen(false)}
+      />
     </div>
   );
 }
