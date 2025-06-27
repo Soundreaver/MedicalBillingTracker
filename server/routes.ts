@@ -162,7 +162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/patients/:id/invoices", async (req, res) => {
+  app.get("/api/patients/:id/invoices", authenticate, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const invoices = await storage.getPatientInvoices(id);
@@ -173,7 +173,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Medicines
-  app.get("/api/medicines", async (req, res) => {
+  app.get("/api/medicines", authenticate, async (req, res) => {
     try {
       const medicines = await storage.getMedicines();
       res.json(medicines);
@@ -182,7 +182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/medicines/low-stock", async (req, res) => {
+  app.get("/api/medicines/low-stock", authenticate, async (req, res) => {
     try {
       const medicines = await storage.getLowStockMedicines();
       res.json(medicines);
@@ -191,7 +191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/medicines", async (req, res) => {
+  app.post("/api/medicines", authenticate, requireDoctorOrAdmin, async (req, res) => {
     try {
       const result = insertMedicineSchema.safeParse(req.body);
       if (!result.success) {
@@ -204,7 +204,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/medicines/:id", async (req, res) => {
+  app.put("/api/medicines/:id", authenticate, requireDoctorOrAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const result = insertMedicineSchema.partial().safeParse(req.body);
@@ -222,7 +222,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Rooms
-  app.get("/api/rooms", async (req, res) => {
+  app.get("/api/rooms", authenticate, async (req, res) => {
     try {
       const rooms = await storage.getRooms();
       res.json(rooms);
@@ -231,7 +231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/rooms/occupancy", async (req, res) => {
+  app.get("/api/rooms/occupancy", authenticate, async (req, res) => {
     try {
       const occupancy = await storage.getRoomOccupancy();
       res.json(occupancy);
@@ -240,7 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/rooms", async (req, res) => {
+  app.post("/api/rooms", authenticate, requireAdmin, async (req, res) => {
     try {
       const result = insertRoomSchema.safeParse(req.body);
       if (!result.success) {
