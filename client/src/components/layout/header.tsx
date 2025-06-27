@@ -1,6 +1,16 @@
 import { useLocation } from "wouter";
-import { Bell } from "lucide-react";
+import { Bell, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { getInitials } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const pageNames: Record<string, string> = {
   "/": "Dashboard",
@@ -22,9 +32,25 @@ const pageDescriptions: Record<string, string> = {
 
 export default function Header() {
   const [location] = useLocation();
+  const { user, logout, isLoggingOut } = useAuth();
   
   const pageName = pageNames[location] || "Page";
   const pageDescription = pageDescriptions[location] || "";
+
+  const displayName = user?.firstName && user?.lastName 
+    ? `${user.firstName} ${user.lastName}`
+    : user?.username || "User";
+
+  const roleDisplay = user?.role === "admin" ? "Administrator" : "Doctor";
+  const userInitials = getInitials(displayName);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 px-8 py-4">
@@ -40,15 +66,33 @@ export default function Header() {
             <Bell className="h-5 w-5 text-gray-400" />
             <span className="absolute top-0 right-0 w-3 h-3 bg-urgent-red rounded-full"></span>
           </Button>
-          <div className="flex items-center space-x-3">
-            <div className="text-right">
-              <p className="text-sm font-medium text-professional-dark">Dr. Sarah Ahmed</p>
-              <p className="text-xs text-gray-500">Billing Administrator</p>
-            </div>
-            <div className="w-10 h-10 bg-medical-teal rounded-full flex items-center justify-center">
-              <span className="text-white font-medium text-sm">SA</span>
-            </div>
-          </div>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="flex items-center space-x-3 h-auto p-2">
+                <div className="text-right">
+                  <p className="text-sm font-medium text-professional-dark">{displayName}</p>
+                  <p className="text-xs text-gray-500">{roleDisplay}</p>
+                </div>
+                <div className="w-10 h-10 bg-medical-teal rounded-full flex items-center justify-center">
+                  <span className="text-white font-medium text-sm">{userInitials}</span>
+                </div>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem disabled>
+                <User className="mr-2 h-4 w-4" />
+                Profile Settings
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut}>
+                <LogOut className="mr-2 h-4 w-4" />
+                {isLoggingOut ? "Signing out..." : "Sign out"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
