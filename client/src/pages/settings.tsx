@@ -379,14 +379,18 @@ export default function Settings() {
                           <Button 
                             type="button" 
                             variant="outline" 
-                            onClick={() => setIsAddingCategory(false)}
+                            onClick={() => {
+                              setIsAddingCategory(false);
+                              setEditingCategory(null);
+                              categoryForm.reset();
+                            }}
                           >
                             <X className="h-4 w-4 mr-2" />
                             Cancel
                           </Button>
                           <Button type="submit" className="bg-medical-teal hover:bg-medical-teal/90">
                             <Save className="h-4 w-4 mr-2" />
-                            Save Category
+                            {editingCategory ? "Update Category" : "Save Category"}
                           </Button>
                         </div>
                       </form>
@@ -502,14 +506,18 @@ export default function Settings() {
                           <Button 
                             type="button" 
                             variant="outline" 
-                            onClick={() => setIsAddingRoomType(false)}
+                            onClick={() => {
+                              setIsAddingRoomType(false);
+                              setEditingRoomType(null);
+                              roomTypeForm.reset();
+                            }}
                           >
                             <X className="h-4 w-4 mr-2" />
                             Cancel
                           </Button>
                           <Button type="submit" className="bg-medical-teal hover:bg-medical-teal/90">
                             <Save className="h-4 w-4 mr-2" />
-                            Save Room Type
+                            {editingRoomType ? "Update Room Type" : "Save Room Type"}
                           </Button>
                         </div>
                       </form>
@@ -531,10 +539,19 @@ export default function Settings() {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleEditRoomType(roomType.id)}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-red-600 hover:text-red-700"
+                        onClick={() => handleDeleteRoomType(roomType.id)}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
