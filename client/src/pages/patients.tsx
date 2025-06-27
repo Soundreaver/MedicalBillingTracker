@@ -7,10 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Plus, Eye, FileText } from "lucide-react";
 import { formatDate, getInitials } from "@/lib/utils";
 import { Patient, InvoiceWithDetails } from "@shared/schema";
+import AddPatientModal from "@/components/modals/add-patient-modal";
 
 export default function Patients() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [isAddPatientModalOpen, setIsAddPatientModalOpen] = useState(false);
 
   const { data: patients = [], isLoading } = useQuery<Patient[]>({
     queryKey: ["/api/patients"],
@@ -38,7 +40,10 @@ export default function Patients() {
           <h1 className="text-2xl font-bold text-professional-dark">Patients</h1>
           <p className="text-gray-600">Manage patient information and billing history</p>
         </div>
-        <Button className="bg-medical-teal hover:bg-medical-teal/90">
+        <Button 
+          className="bg-medical-teal hover:bg-medical-teal/90"
+          onClick={() => setIsAddPatientModalOpen(true)}
+        >
           <Plus className="mr-2" size={16} />
           Add New Patient
         </Button>
@@ -205,6 +210,11 @@ export default function Patients() {
           )}
         </div>
       </div>
+
+      <AddPatientModal
+        isOpen={isAddPatientModalOpen}
+        onClose={() => setIsAddPatientModalOpen(false)}
+      />
     </div>
   );
 }
