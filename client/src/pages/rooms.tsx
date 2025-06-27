@@ -6,16 +6,19 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Bed, Users, CheckCircle, XCircle, UserPlus } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { Room, RoomOccupancy, Patient } from "@shared/schema";
+import { Room, RoomOccupancy, Patient, InvoiceWithDetails } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import AssignPatientModal from "@/components/modals/assign-patient-modal";
+import PaymentModal from "@/components/modals/payment-modal";
 
 export default function Rooms() {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedRoomForAssignment, setSelectedRoomForAssignment] = useState<Room | null>(null);
+  const [selectedRoomForCheckout, setSelectedRoomForCheckout] = useState<Room | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const { toast } = useToast();
 
   const { data: rooms = [], isLoading } = useQuery<Room[]>({
@@ -28,6 +31,10 @@ export default function Rooms() {
 
   const { data: patients = [] } = useQuery<Patient[]>({
     queryKey: ["/api/patients"],
+  });
+
+  const { data: invoices = [] } = useQuery<InvoiceWithDetails[]>({
+    queryKey: ["/api/invoices"],
   });
 
   const updateRoomMutation = useMutation({
@@ -70,13 +77,54 @@ export default function Rooms() {
   });
 
   const handleRoomStatusToggle = (room: Room) => {
-    updateRoomMutation.mutate({
-      id: room.id,
-      data: { 
-        isOccupied: !room.isOccupied,
-        currentPatientId: room.isOccupied ? null : room.currentPatientId
+    if (room.isOccupied) {
+      // For checkout, find the outstanding invoice for this patient and room
+      const outstandingInvoice = invoices.find(invoice => 
+        invoice.patientId === room.currentPatientId && 
+        invoice.outstandingAmount > 0 &&
+        invoice.items.some(item => item.itemType === 'room' && item.itemId === room.id)
+      );
+
+      if (outstandingInvoice) {
+        // Show payment modal for the outstanding invoice
+        setSelectedRoomForCheckout(room);
+        setShowPaymentModal(true);
+      } else {
+        // No outstanding invoice, just checkout
+        updateRoomMutation.mutate({
+          id: room.id,
+          data: { 
+            isOccupied: false,
+            currentPatientId: null
+          }
+        });
       }
-    });
+    } else {
+      // This shouldn't happen as we only show assign button for available rooms
+      // But keeping for safety
+      updateRoomMutation.mutate({
+        id: room.id,
+        data: { 
+          isOccupied: true,
+          currentPatientId: room.currentPatientId
+        }
+      });
+    }
+  };
+
+  const handlePaymentComplete = () => {
+    // After payment, checkout the room
+    if (selectedRoomForCheckout) {
+      updateRoomMutation.mutate({
+        id: selectedRoomForCheckout.id,
+        data: { 
+          isOccupied: false,
+          currentPatientId: null
+        }
+      });
+    }
+    setShowPaymentModal(false);
+    setSelectedRoomForCheckout(null);
   };
 
   const getPatientName = (patientId: number | null) => {

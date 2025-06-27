@@ -221,20 +221,33 @@ export default function Billing() {
                             <Eye size={16} />
                           </Button>
                           {invoice.outstandingAmount > 0 && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleRecordPayment(invoice)}
-                              className="text-success-green hover:text-green-700"
-                            >
-                              <CreditCard size={16} />
-                            </Button>
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleEditInvoice(invoice)}
+                                className="text-orange-600 hover:text-orange-700"
+                                title="Edit Invoice"
+                              >
+                                <Edit size={16} />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleRecordPayment(invoice)}
+                                className="text-success-green hover:text-green-700"
+                                title="Record Payment"
+                              >
+                                <CreditCard size={16} />
+                              </Button>
+                            </>
                           )}
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => handleDownloadPDF(invoice)}
                             className="text-soft-blue hover:text-blue-700"
+                            title="Download PDF"
                           >
                             <Download size={16} />
                           </Button>
@@ -274,6 +287,14 @@ export default function Billing() {
         isOpen={showCreateInvoice}
         onClose={() => setShowCreateInvoice(false)}
       />
+
+      {selectedInvoice && (
+        <EditInvoiceModal
+          invoice={selectedInvoice}
+          isOpen={showEditInvoice}
+          onClose={() => setShowEditInvoice(false)}
+        />
+      )}
     </div>
   );
 }
