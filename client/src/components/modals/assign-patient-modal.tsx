@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { X, UserCheck, Plus, Trash2 } from "lucide-react";
 import { Room, Patient, Medicine } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -197,7 +197,7 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader className="border-b pb-4 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
@@ -212,7 +212,7 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-1 max-h-[60vh]">
+        <div className="flex-1 overflow-y-auto px-1 max-h-[50vh]">
           <div className="py-6 space-y-6 pr-4">
             {/* Room Details */}
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
@@ -439,7 +439,7 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
             </form>
           </Form>
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Action buttons outside scrollable area */}
         <div className="flex justify-end space-x-3 pt-4 border-t flex-shrink-0">
