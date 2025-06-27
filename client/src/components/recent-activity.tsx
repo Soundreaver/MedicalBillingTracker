@@ -1,51 +1,68 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, FileText, AlertTriangle, UserPlus } from "lucide-react";
+import { Check, FileText, AlertTriangle, UserPlus, Package, Bed, Settings } from "lucide-react";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import type { ActivityLog } from "@shared/schema";
 
-// Mock recent activities - in a real app, this would come from an API
-const recentActivities = [
-  {
-    id: 1,
-    type: "payment",
-    title: "Payment received from Md. Rahman",
-    description: "Invoice #INV-2024-001 - ৳ 15,500",
-    timestamp: new Date(Date.now() - 2 * 60 * 1000), // 2 minutes ago
-    icon: Check,
-    iconColor: "text-success-green",
-    iconBg: "bg-success-green/10",
-  },
-  {
-    id: 2,
-    type: "invoice",
-    title: "New invoice created for Mrs. Fatima",
-    description: "Room charges & medications - ৳ 8,750",
-    timestamp: new Date(Date.now() - 15 * 60 * 1000), // 15 minutes ago
-    icon: FileText,
-    iconColor: "text-medical-teal",
-    iconBg: "bg-medical-teal/10",
-  },
-  {
-    id: 3,
-    type: "alert",
-    title: "Low stock alert: Paracetamol 500mg",
-    description: "Only 45 units remaining",
-    timestamp: new Date(Date.now() - 60 * 60 * 1000), // 1 hour ago
-    icon: AlertTriangle,
-    iconColor: "text-urgent-red",
-    iconBg: "bg-urgent-red/10",
-  },
-  {
-    id: 4,
-    type: "patient",
-    title: "New patient registered: Ahmed Hassan",
-    description: "Patient ID: PAT-2024-0432",
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-    icon: UserPlus,
-    iconColor: "text-soft-blue",
-    iconBg: "bg-soft-blue/10",
-  },
-];
+const getActivityIcon = (type: string) => {
+  switch (type) {
+    case "payment":
+      return Check;
+    case "invoice":
+      return FileText;
+    case "patient":
+      return UserPlus;
+    case "medicine":
+      return Package;
+    case "room":
+      return Bed;
+    case "alert":
+      return AlertTriangle;
+    default:
+      return Settings;
+  }
+};
+
+const getActivityStyle = (type: string) => {
+  switch (type) {
+    case "payment":
+      return {
+        iconColor: "text-success-green",
+        iconBg: "bg-success-green/10",
+      };
+    case "invoice":
+      return {
+        iconColor: "text-medical-teal",
+        iconBg: "bg-medical-teal/10",
+      };
+    case "patient":
+      return {
+        iconColor: "text-soft-blue",
+        iconBg: "bg-soft-blue/10",
+      };
+    case "medicine":
+      return {
+        iconColor: "text-purple-600",
+        iconBg: "bg-purple-600/10",
+      };
+    case "room":
+      return {
+        iconColor: "text-orange-600",
+        iconBg: "bg-orange-600/10",
+      };
+    case "alert":
+      return {
+        iconColor: "text-urgent-red",
+        iconBg: "bg-urgent-red/10",
+      };
+    default:
+      return {
+        iconColor: "text-gray-600",
+        iconBg: "bg-gray-600/10",
+      };
+  }
+};
 
 function getTimeAgo(date: Date): string {
   const now = new Date();
@@ -62,6 +79,35 @@ function getTimeAgo(date: Date): string {
 }
 
 export default function RecentActivity() {
+  const { data: activities = [], isLoading } = useQuery<ActivityLog[]>({
+    queryKey: ["/api/activity-logs"],
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  if (isLoading) {
+    return (
+      <Card className="border border-gray-200">
+        <CardHeader className="border-b border-gray-200">
+          <CardTitle className="text-lg font-semibold text-professional-dark">Recent Activity</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg animate-pulse">
+                <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+                </div>
+                <div className="h-3 bg-gray-300 rounded w-16"></div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="border border-gray-200">
       <CardHeader className="border-b border-gray-200">
@@ -73,26 +119,37 @@ export default function RecentActivity() {
         </div>
       </CardHeader>
       <CardContent className="p-6">
-        <div className="space-y-4">
-          {recentActivities.map((activity) => {
-            const Icon = activity.icon;
-            
-            return (
-              <div key={activity.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-                <div className={`w-10 h-10 ${activity.iconBg} rounded-full flex items-center justify-center`}>
-                  <Icon className={activity.iconColor} size={16} />
+        {activities.length === 0 ? (
+          <div className="text-center py-8">
+            <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+            <p className="text-gray-500">No recent activity</p>
+            <p className="text-sm text-gray-400">Activity will appear here as you use the system</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {activities.map((activity) => {
+              const Icon = getActivityIcon(activity.type);
+              const style = getActivityStyle(activity.type);
+              
+              return (
+                <div key={activity.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                  <div className={`w-10 h-10 ${style.iconBg} rounded-full flex items-center justify-center`}>
+                    <Icon className={style.iconColor} size={16} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-professional-dark">{activity.title}</p>
+                    {activity.description && (
+                      <p className="text-sm text-gray-600">{activity.description}</p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-gray-500">{getTimeAgo(new Date(activity.createdAt))}</p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="font-medium text-professional-dark">{activity.title}</p>
-                  <p className="text-sm text-gray-600">{activity.description}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-500">{getTimeAgo(activity.timestamp)}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

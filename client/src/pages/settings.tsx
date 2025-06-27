@@ -68,6 +68,8 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState("medicine-categories");
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [isAddingRoomType, setIsAddingRoomType] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<string | null>(null);
+  const [editingRoomType, setEditingRoomType] = useState<string | null>(null);
   const [isAddingMedicine, setIsAddingMedicine] = useState(false);
   const [isAddingRoom, setIsAddingRoom] = useState(false);
   const { toast } = useToast();
