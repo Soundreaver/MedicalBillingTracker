@@ -78,23 +78,8 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
   });
 
   const createInvoiceMutation = useMutation({
-    mutationFn: async (data: CreateInvoiceFormData) => {
-      const invoiceData = {
-        ...data.invoice,
-        totalAmount: parseFloat(data.invoice.totalAmount),
-        paidAmount: parseFloat(data.invoice.paidAmount || "0"),
-      };
-
-      const itemsData = data.items.map(item => ({
-        ...item,
-        unitPrice: parseFloat(item.unitPrice),
-        totalPrice: parseFloat(item.totalPrice),
-      }));
-
-      const response = await apiRequest("POST", "/api/invoices", {
-        invoice: invoiceData,
-        items: itemsData,
-      });
+    mutationFn: async (data: { invoice: any; items: any[] }) => {
+      const response = await apiRequest("POST", "/api/invoices", data);
       return response.json();
     },
     onSuccess: () => {
@@ -180,8 +165,8 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
       itemId: item.itemId,
       itemName: item.itemName,
       quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      totalPrice: item.totalPrice,
+      unitPrice: parseFloat(item.unitPrice),
+      totalPrice: parseFloat(item.totalPrice),
     }));
 
     const total = calculateTotal();
@@ -189,7 +174,8 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
     await createInvoiceMutation.mutateAsync({
       invoice: {
         ...data.invoice,
-        totalAmount: total.toString(),
+        totalAmount: total,
+        paidAmount: parseFloat(data.invoice.paidAmount || "0"),
       },
       items: formattedItems,
     });
@@ -282,7 +268,14 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Input placeholder="Invoice description..." {...field} />
+                      <Input 
+                        placeholder="Invoice description..." 
+                        name={field.name}
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
