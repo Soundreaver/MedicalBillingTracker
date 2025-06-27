@@ -8,6 +8,8 @@ import {
   type Payment, type InsertPayment,
   type InvoiceWithDetails, type DashboardStats, type RoomOccupancy
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, sql, lt } from "drizzle-orm";
 
 export interface IStorage {
   // Patients
@@ -50,27 +52,12 @@ export interface IStorage {
   getDashboardStats(): Promise<DashboardStats>;
 }
 
-export class MemStorage implements IStorage {
-  private patients: Map<number, Patient> = new Map();
-  private medicines: Map<number, Medicine> = new Map();
-  private rooms: Map<number, Room> = new Map();
-  private invoices: Map<number, Invoice> = new Map();
-  private invoiceItems: Map<number, InvoiceItem> = new Map();
-  private payments: Map<number, Payment> = new Map();
-  private currentId = {
-    patients: 1,
-    medicines: 1,
-    rooms: 1,
-    invoices: 1,
-    invoiceItems: 1,
-    payments: 1,
-  };
+export class DatabaseStorage implements IStorage {
+  async seedData() {
+    // Check if data already exists
+    const existingPatients = await db.select().from(patients).limit(1);
+    if (existingPatients.length > 0) return;
 
-  constructor() {
-    this.seedData();
-  }
-
-  private seedData() {
     // Seed patients
     const samplePatients: InsertPatient[] = [
       { name: "Md. Rahman", phone: "01712345678", email: "rahman@example.com", address: "Dhaka, Bangladesh", patientId: "PAT-2024-0123" },
@@ -78,10 +65,7 @@ export class MemStorage implements IStorage {
       { name: "Ahmed Hassan", phone: "01712345680", email: "ahmed@example.com", address: "Sylhet, Bangladesh", patientId: "PAT-2024-0125" },
     ];
 
-    samplePatients.forEach(patient => {
-      const id = this.currentId.patients++;
-      this.patients.set(id, { ...patient, id, createdAt: new Date() });
-    });
+    await db.insert(patients).values(samplePatients);
 
     // Seed medicines
     const sampleMedicines: InsertMedicine[] = [
@@ -91,10 +75,7 @@ export class MemStorage implements IStorage {
       { name: "Omeprazole 20mg", category: "Gastric", unitPrice: "8.75", stockQuantity: 200, lowStockThreshold: 100, unit: "tablets" },
     ];
 
-    sampleMedicines.forEach(medicine => {
-      const id = this.currentId.medicines++;
-      this.medicines.set(id, { ...medicine, id });
-    });
+    await db.insert(medicines).values(sampleMedicines);
 
     // Seed rooms
     const sampleRooms: InsertRoom[] = [
@@ -104,100 +85,86 @@ export class MemStorage implements IStorage {
       { roomNumber: "301", roomType: "ICU", dailyRate: "8000.00", isOccupied: true, currentPatientId: 3 },
     ];
 
-    sampleRooms.forEach(room => {
-      const id = this.currentId.rooms++;
-      this.rooms.set(id, { ...room, id });
-    });
+    await db.insert(rooms).values(sampleRooms);
   }
 
-  // Patients
+  // Patient methods
   async getPatients(): Promise<Patient[]> {
-    return Array.from(this.patients.values());
+    return await db.select().from(patients);
   }
 
   async getPatient(id: number): Promise<Patient | undefined> {
-    return this.patients.get(id);
+    const [patient] = await db.select().from(patients).where(eq(patients.id, id));
+    return patient || undefined;
   }
 
   async getPatientByPatientId(patientId: string): Promise<Patient | undefined> {
-    return Array.from(this.patients.values()).find(p => p.patientId === patientId);
+    const [patient] = await db.select().from(patients).where(eq(patients.patientId, patientId));
+    return patient || undefined;
   }
 
   async createPatient(patient: InsertPatient): Promise<Patient> {
-    const id = this.currentId.patients++;
-    const newPatient: Patient = { ...patient, id, createdAt: new Date() };
-    this.patients.set(id, newPatient);
+    const [newPatient] = await db.insert(patients).values(patient).returning();
     return newPatient;
   }
 
   async updatePatient(id: number, patient: Partial<InsertPatient>): Promise<Patient | undefined> {
-    const existing = this.patients.get(id);
-    if (!existing) return undefined;
-    const updated = { ...existing, ...patient };
-    this.patients.set(id, updated);
-    return updated;
+    const [updated] = await db.update(patients).set(patient).where(eq(patients.id, id)).returning();
+    return updated || undefined;
   }
 
-  // Medicines
+  // Medicine methods
   async getMedicines(): Promise<Medicine[]> {
-    return Array.from(this.medicines.values());
+    return await db.select().from(medicines);
   }
 
   async getMedicine(id: number): Promise<Medicine | undefined> {
-    return this.medicines.get(id);
+    const [medicine] = await db.select().from(medicines).where(eq(medicines.id, id));
+    return medicine || undefined;
   }
 
   async createMedicine(medicine: InsertMedicine): Promise<Medicine> {
-    const id = this.currentId.medicines++;
-    const newMedicine: Medicine = { ...medicine, id };
-    this.medicines.set(id, newMedicine);
+    const [newMedicine] = await db.insert(medicines).values(medicine).returning();
     return newMedicine;
   }
 
   async updateMedicine(id: number, medicine: Partial<InsertMedicine>): Promise<Medicine | undefined> {
-    const existing = this.medicines.get(id);
-    if (!existing) return undefined;
-    const updated = { ...existing, ...medicine };
-    this.medicines.set(id, updated);
-    return updated;
+    const [updated] = await db.update(medicines).set(medicine).where(eq(medicines.id, id)).returning();
+    return updated || undefined;
   }
 
   async getLowStockMedicines(): Promise<Medicine[]> {
-    return Array.from(this.medicines.values()).filter(m => m.stockQuantity <= m.lowStockThreshold);
+    return await db.select().from(medicines).where(sql`${medicines.stockQuantity} <= ${medicines.lowStockThreshold}`);
   }
 
-  // Rooms
+  // Room methods
   async getRooms(): Promise<Room[]> {
-    return Array.from(this.rooms.values());
+    return await db.select().from(rooms);
   }
 
   async getRoom(id: number): Promise<Room | undefined> {
-    return this.rooms.get(id);
+    const [room] = await db.select().from(rooms).where(eq(rooms.id, id));
+    return room || undefined;
   }
 
   async createRoom(room: InsertRoom): Promise<Room> {
-    const id = this.currentId.rooms++;
-    const newRoom: Room = { ...room, id };
-    this.rooms.set(id, newRoom);
+    const [newRoom] = await db.insert(rooms).values(room).returning();
     return newRoom;
   }
 
   async updateRoom(id: number, room: Partial<InsertRoom>): Promise<Room | undefined> {
-    const existing = this.rooms.get(id);
-    if (!existing) return undefined;
-    const updated = { ...existing, ...room };
-    this.rooms.set(id, updated);
-    return updated;
+    const [updated] = await db.update(rooms).set(room).where(eq(rooms.id, id)).returning();
+    return updated || undefined;
   }
 
   async getRoomOccupancy(): Promise<RoomOccupancy> {
-    const rooms = Array.from(this.rooms.values());
-    const total = rooms.length;
-    const occupied = rooms.filter(r => r.isOccupied).length;
+    const allRooms = await db.select().from(rooms);
+    const total = allRooms.length;
+    const occupied = allRooms.filter(room => room.isOccupied).length;
     const available = total - occupied;
-    const occupancyRate = Math.round((occupied / total) * 100);
+    const occupancyRate = total > 0 ? (occupied / total) * 100 : 0;
 
-    const roomTypes = rooms.reduce((acc, room) => {
+    const roomTypes = allRooms.reduce((acc, room) => {
       const existing = acc.find(rt => rt.name === room.roomType);
       if (existing) {
         existing.total++;
@@ -210,84 +177,80 @@ export class MemStorage implements IStorage {
         });
       }
       return acc;
-    }, [] as { name: string; occupied: number; total: number }[]);
+    }, [] as { name: string; occupied: number; total: number; }[]);
 
     return { total, occupied, available, occupancyRate, roomTypes };
   }
 
-  // Invoices
+  // Invoice methods
   async getInvoices(): Promise<InvoiceWithDetails[]> {
-    const invoices = Array.from(this.invoices.values());
+    const allInvoices = await db.select().from(invoices);
     const result: InvoiceWithDetails[] = [];
-    
-    for (const invoice of invoices) {
-      const patient = this.patients.get(invoice.patientId);
-      const items = Array.from(this.invoiceItems.values()).filter(item => item.invoiceId === invoice.id);
-      const payments = Array.from(this.payments.values()).filter(payment => payment.invoiceId === invoice.id);
-      const outstandingAmount = parseFloat(invoice.totalAmount) - parseFloat(invoice.paidAmount);
+
+    for (const invoice of allInvoices) {
+      const patient = await this.getPatient(invoice.patientId);
+      const items = await db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, invoice.id));
+      const paymentsList = await this.getInvoicePayments(invoice.id);
       
+      const totalPaid = paymentsList.reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
+      const outstandingAmount = parseFloat(invoice.totalAmount) - totalPaid;
+
       if (patient) {
-        result.push({ ...invoice, patient, items, payments, outstandingAmount });
+        result.push({
+          ...invoice,
+          patient,
+          items,
+          payments: paymentsList,
+          outstandingAmount,
+        });
       }
     }
-    
+
     return result;
   }
 
   async getInvoice(id: number): Promise<InvoiceWithDetails | undefined> {
-    const invoice = this.invoices.get(id);
+    const [invoice] = await db.select().from(invoices).where(eq(invoices.id, id));
     if (!invoice) return undefined;
+
+    const patient = await this.getPatient(invoice.patientId);
+    const items = await db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, invoice.id));
+    const paymentsList = await this.getInvoicePayments(invoice.id);
     
-    const patient = this.patients.get(invoice.patientId);
+    const totalPaid = paymentsList.reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
+    const outstandingAmount = parseFloat(invoice.totalAmount) - totalPaid;
+
     if (!patient) return undefined;
-    
-    const items = Array.from(this.invoiceItems.values()).filter(item => item.invoiceId === id);
-    const payments = Array.from(this.payments.values()).filter(payment => payment.invoiceId === id);
-    const outstandingAmount = parseFloat(invoice.totalAmount) - parseFloat(invoice.paidAmount);
-    
-    return { ...invoice, patient, items, payments, outstandingAmount };
+
+    return {
+      ...invoice,
+      patient,
+      items,
+      payments: paymentsList,
+      outstandingAmount,
+    };
   }
 
   async getInvoiceByNumber(invoiceNumber: string): Promise<InvoiceWithDetails | undefined> {
-    const invoice = Array.from(this.invoices.values()).find(inv => inv.invoiceNumber === invoiceNumber);
+    const [invoice] = await db.select().from(invoices).where(eq(invoices.invoiceNumber, invoiceNumber));
     if (!invoice) return undefined;
     return this.getInvoice(invoice.id);
   }
 
   async createInvoice(invoice: InsertInvoice, items: InsertInvoiceItem[]): Promise<InvoiceWithDetails> {
-    const id = this.currentId.invoices++;
-    const newInvoice: Invoice = { 
-      ...invoice, 
-      id, 
-      createdAt: new Date(),
-      totalAmount: items.reduce((sum, item) => sum + parseFloat(item.totalPrice), 0).toString()
-    };
-    this.invoices.set(id, newInvoice);
+    const [newInvoice] = await db.insert(invoices).values(invoice).returning();
+    
+    const invoiceItemsWithId = items.map(item => ({ ...item, invoiceId: newInvoice.id }));
+    await db.insert(invoiceItems).values(invoiceItemsWithId);
 
-    const invoiceItems: InvoiceItem[] = [];
-    for (const item of items) {
-      const itemId = this.currentId.invoiceItems++;
-      const newItem: InvoiceItem = { ...item, id: itemId, invoiceId: id };
-      this.invoiceItems.set(itemId, newItem);
-      invoiceItems.push(newItem);
-    }
-
-    const patient = this.patients.get(invoice.patientId)!;
-    return { 
-      ...newInvoice, 
-      patient, 
-      items: invoiceItems, 
-      payments: [], 
-      outstandingAmount: parseFloat(newInvoice.totalAmount) 
-    };
+    const result = await this.getInvoice(newInvoice.id);
+    if (!result) throw new Error("Failed to create invoice");
+    return result;
   }
 
   async updateInvoice(id: number, invoice: Partial<InsertInvoice>): Promise<Invoice | undefined> {
-    const existing = this.invoices.get(id);
-    if (!existing) return undefined;
-    const updated = { ...existing, ...invoice };
-    this.invoices.set(id, updated);
-    return updated;
+    const [updated] = await db.update(invoices).set(invoice).where(eq(invoices.id, id)).returning();
+    return updated || undefined;
   }
 
   async getOutstandingInvoices(): Promise<InvoiceWithDetails[]> {
@@ -300,74 +263,55 @@ export class MemStorage implements IStorage {
     return allInvoices.filter(invoice => invoice.patientId === patientId);
   }
 
-  // Payments
+  // Payment methods
   async getPayments(): Promise<Payment[]> {
-    return Array.from(this.payments.values());
+    return await db.select().from(payments);
   }
 
   async getPayment(id: number): Promise<Payment | undefined> {
-    return this.payments.get(id);
+    const [payment] = await db.select().from(payments).where(eq(payments.id, id));
+    return payment || undefined;
   }
 
   async createPayment(payment: InsertPayment): Promise<Payment> {
-    const id = this.currentId.payments++;
-    const newPayment: Payment = { ...payment, id, paymentDate: new Date() };
-    this.payments.set(id, newPayment);
-
-    // Update invoice paid amount
-    const invoice = this.invoices.get(payment.invoiceId);
-    if (invoice) {
-      const newPaidAmount = parseFloat(invoice.paidAmount) + parseFloat(payment.amount);
-      const updatedInvoice = { 
-        ...invoice, 
-        paidAmount: newPaidAmount.toString(),
-        status: newPaidAmount >= parseFloat(invoice.totalAmount) ? "paid" : "pending"
-      };
-      this.invoices.set(payment.invoiceId, updatedInvoice);
-    }
-
+    const [newPayment] = await db.insert(payments).values(payment).returning();
     return newPayment;
   }
 
   async getInvoicePayments(invoiceId: number): Promise<Payment[]> {
-    return Array.from(this.payments.values()).filter(payment => payment.invoiceId === invoiceId);
+    return await db.select().from(payments).where(eq(payments.invoiceId, invoiceId));
   }
 
-  // Dashboard
+  // Dashboard methods
   async getDashboardStats(): Promise<DashboardStats> {
-    const invoices = Array.from(this.invoices.values());
+    const allInvoices = await this.getInvoices();
     const lowStockMeds = await this.getLowStockMedicines();
     
-    const totalOutstanding = invoices.reduce((sum, inv) => {
-      return sum + (parseFloat(inv.totalAmount) - parseFloat(inv.paidAmount));
-    }, 0);
-
+    const totalOutstanding = allInvoices.reduce((sum, inv) => sum + inv.outstandingAmount, 0);
+    const pendingInvoices = allInvoices.filter(inv => inv.outstandingAmount > 0).length;
+    const pendingAmount = totalOutstanding;
+    
+    // Calculate monthly revenue (current month)
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
-    const monthlyRevenue = invoices
-      .filter(inv => inv.createdAt && 
-        inv.createdAt.getMonth() === currentMonth && 
-        inv.createdAt.getFullYear() === currentYear)
-      .reduce((sum, inv) => sum + parseFloat(inv.paidAmount), 0);
-
-    const pendingInvoices = invoices.filter(inv => inv.status === "pending").length;
-    const pendingAmount = invoices
-      .filter(inv => inv.status === "pending")
-      .reduce((sum, inv) => sum + (parseFloat(inv.totalAmount) - parseFloat(inv.paidAmount)), 0);
-
-    const criticalItems = lowStockMeds.filter(med => med.stockQuantity <= 10).length;
+    const monthlyRevenue = allInvoices
+      .filter(inv => {
+        const invDate = new Date(inv.createdAt || '');
+        return invDate.getMonth() === currentMonth && invDate.getFullYear() === currentYear;
+      })
+      .reduce((sum, inv) => sum + parseFloat(inv.totalAmount), 0);
 
     return {
       totalOutstanding,
       monthlyRevenue,
       pendingInvoices,
       lowStockItems: lowStockMeds.length,
-      outstandingChange: 12, // Mock percentage change
-      revenueChange: 8, // Mock percentage change
+      outstandingChange: 0, // Placeholder - would need historical data
+      revenueChange: 0, // Placeholder - would need historical data
       pendingAmount,
-      criticalItems,
+      criticalItems: lowStockMeds.filter(med => med.stockQuantity <= 10).length,
     };
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
