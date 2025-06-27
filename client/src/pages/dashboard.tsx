@@ -26,7 +26,7 @@ export default function Dashboard() {
   });
 
   if (!stats || !roomOccupancy) {
-    return <div className="p-8">Loading...</div>;
+    return <div>Loading...</div>;
   }
 
   const quickActions = [
@@ -61,7 +61,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="space-y-8">
       <StatsCards stats={stats} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

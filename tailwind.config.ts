@@ -61,6 +61,12 @@ export default {
           border: "var(--sidebar-border)",
           ring: "var(--sidebar-ring)",
         },
+        "medical-teal": "var(--medical-teal)",
+        "soft-blue": "var(--soft-blue)",
+        "clinical-white": "var(--clinical-white)",
+        "professional-dark": "var(--professional-dark)",
+        "urgent-red": "var(--urgent-red)",
+        "success-green": "var(--success)",
       },
       keyframes: {
         "accordion-down": {

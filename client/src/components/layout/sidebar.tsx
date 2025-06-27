@@ -55,11 +55,11 @@ export default function Sidebar() {
             return (
               <Link key={item.path} href={item.path}>
                 <div className={cn(
-                  "flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-medical-teal transition-colors cursor-pointer",
-                  isActive && "text-medical-teal bg-medical-teal bg-opacity-10 border-r-3 border-medical-teal"
+                  "flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-medical-teal transition-colors cursor-pointer relative",
+                  isActive && "text-medical-teal bg-medical-teal/10 border-r-4 border-medical-teal font-semibold"
                 )}>
                   <Icon className="mr-3" size={18} />
-                  <span className="font-medium">{item.label}</span>
+                  <span className="font-medium truncate">{item.label}</span>
                 </div>
               </Link>
             );
