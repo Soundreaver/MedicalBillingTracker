@@ -311,13 +311,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/invoices", authenticate, requireDoctorOrAdmin, async (req, res) => {
     try {
+      console.log("Received invoice data:", JSON.stringify(req.body, null, 2));
       const result = createInvoiceSchema.safeParse(req.body);
       if (!result.success) {
+        console.log("Validation errors:", JSON.stringify(result.error.errors, null, 2));
         return res.status(400).json({ message: "Invalid invoice data", errors: result.error.errors });
       }
+      console.log("Validation passed, creating invoice...");
       const invoice = await storage.createInvoice(result.data.invoice, result.data.items);
       res.status(201).json(invoice);
     } catch (error) {
+      console.error("Error creating invoice:", error);
       res.status(500).json({ message: "Failed to create invoice" });
     }
   });
