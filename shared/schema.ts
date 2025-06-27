@@ -1,6 +1,31 @@
-import { pgTable, text, serial, integer, boolean, timestamp, decimal, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, decimal, varchar, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Users table for authentication
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: varchar("username", { length: 50 }).notNull().unique(),
+  email: varchar("email", { length: 255 }).unique(),
+  passwordHash: varchar("password_hash", { length: 255 }).notNull(),
+  role: varchar("role", { length: 20 }).notNull().default("doctor"), // admin, doctor
+  firstName: varchar("first_name", { length: 100 }),
+  lastName: varchar("last_name", { length: 100 }),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Sessions table for session management
+export const sessions = pgTable("sessions", {
+  id: varchar("id", { length: 128 }).primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("sessions_user_id_idx").on(table.userId),
+  index("sessions_expires_at_idx").on(table.expiresAt),
+]);
 
 export const patients = pgTable("patients", {
   id: serial("id").primaryKey(),
@@ -92,7 +117,40 @@ export const insertPaymentSchema = createInsertSchema(payments).omit({
   paymentDate: true,
 });
 
+// User schemas
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const loginSchema = z.object({
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
+});
+
+export const updateUserSchema = insertUserSchema.partial().omit({
+  passwordHash: true,
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z.string().min(6, "New password must be at least 6 characters"),
+  confirmPassword: z.string().min(1, "Confirm password is required"),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
 // Types
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type LoginData = z.infer<typeof loginSchema>;
+export type UpdateUser = z.infer<typeof updateUserSchema>;
+export type ChangePasswordData = z.infer<typeof changePasswordSchema>;
+
+export type Session = typeof sessions.$inferSelect;
+
 export type Patient = typeof patients.$inferSelect;
 export type InsertPatient = z.infer<typeof insertPatientSchema>;
 
