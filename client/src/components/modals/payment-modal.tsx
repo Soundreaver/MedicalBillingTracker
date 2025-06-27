@@ -59,7 +59,7 @@ export default function PaymentModal({ invoice, isOpen, onClose }: PaymentModalP
     mutationFn: async (data: PaymentFormData) => {
       const response = await apiRequest("POST", "/api/payments", {
         ...data,
-        amount: parseFloat(data.amount),
+        amount: data.amount, // Keep as string for decimal validation
       });
       return response.json();
     },

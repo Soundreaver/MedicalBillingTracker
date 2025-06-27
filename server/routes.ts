@@ -338,13 +338,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/payments", authenticate, requireDoctorOrAdmin, async (req, res) => {
     try {
+      console.log("Received payment data:", JSON.stringify(req.body, null, 2));
       const result = insertPaymentSchema.safeParse(req.body);
       if (!result.success) {
+        console.log("Payment validation errors:", JSON.stringify(result.error.errors, null, 2));
         return res.status(400).json({ message: "Invalid payment data", errors: result.error.errors });
       }
+      console.log("Payment validation passed, creating payment...");
       const payment = await storage.createPayment(result.data);
       res.status(201).json(payment);
     } catch (error) {
+      console.error("Error creating payment:", error);
       res.status(500).json({ message: "Failed to create payment" });
     }
   });
