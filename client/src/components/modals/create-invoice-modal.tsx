@@ -172,8 +172,8 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
       itemId: item.itemId,
       itemName: item.itemName,
       quantity: item.quantity,
-      unitPrice: parseFloat(item.unitPrice),
-      totalPrice: parseFloat(item.totalPrice),
+      unitPrice: item.unitPrice, // Keep as string for decimal
+      totalPrice: item.totalPrice, // Keep as string for decimal
     }));
 
     const total = calculateTotal();
@@ -181,8 +181,8 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
     console.log("Submitting invoice:", {
       invoice: {
         ...data.invoice,
-        totalAmount: total,
-        paidAmount: parseFloat(data.invoice.paidAmount || "0"),
+        totalAmount: total.toString(), // Convert to string for decimal
+        paidAmount: data.invoice.paidAmount || "0", // Keep as string for decimal
       },
       items: formattedItems,
     });
@@ -190,8 +190,8 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
     await createInvoiceMutation.mutateAsync({
       invoice: {
         ...data.invoice,
-        totalAmount: total,
-        paidAmount: parseFloat(data.invoice.paidAmount || "0"),
+        totalAmount: total.toString(), // Convert to string for decimal
+        paidAmount: data.invoice.paidAmount || "0", // Keep as string for decimal
       },
       items: formattedItems,
     });
