@@ -89,6 +89,16 @@ export const payments = pgTable("payments", {
   notes: text("notes"),
 });
 
+export const activityLogs = pgTable("activity_logs", {
+  id: serial("id").primaryKey(),
+  type: varchar("type", { length: 50 }).notNull(), // 'payment', 'invoice', 'patient', 'medicine', 'room'
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  userId: integer("user_id").references(() => users.id),
+  relatedId: integer("related_id"), // ID of related record (patient, invoice, etc.)
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Insert schemas
 export const insertPatientSchema = createInsertSchema(patients).omit({
   id: true,
@@ -169,6 +179,15 @@ export type InsertInvoiceItem = z.infer<typeof insertInvoiceItemSchema>;
 
 export type Payment = typeof payments.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+
+export type ActivityLog = typeof activityLogs.$inferSelect;
+
+export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
 
 // Extended types for API responses
 export type InvoiceWithDetails = Invoice & {

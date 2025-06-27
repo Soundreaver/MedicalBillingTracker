@@ -1,11 +1,12 @@
 import { 
-  patients, medicines, rooms, invoices, invoiceItems, payments,
+  patients, medicines, rooms, invoices, invoiceItems, payments, activityLogs,
   type Patient, type InsertPatient,
   type Medicine, type InsertMedicine,
   type Room, type InsertRoom,
   type Invoice, type InsertInvoice,
   type InvoiceItem, type InsertInvoiceItem,
   type Payment, type InsertPayment,
+  type ActivityLog, type InsertActivityLog,
   type InvoiceWithDetails, type DashboardStats, type RoomOccupancy
 } from "@shared/schema";
 import { db } from "./db";
@@ -50,6 +51,10 @@ export interface IStorage {
 
   // Dashboard
   getDashboardStats(): Promise<DashboardStats>;
+
+  // Activity Logs
+  getActivityLogs(limit?: number): Promise<ActivityLog[]>;
+  logActivity(activity: InsertActivityLog): Promise<ActivityLog>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -79,10 +84,10 @@ export class DatabaseStorage implements IStorage {
 
     // Seed rooms
     const sampleRooms: InsertRoom[] = [
-      { roomNumber: "101", roomType: "General Ward", dailyRate: "1500.00", isOccupied: true, currentPatientId: 1 },
+      { roomNumber: "101", roomType: "General Ward", dailyRate: "1500.00", isOccupied: false, currentPatientId: null },
       { roomNumber: "102", roomType: "General Ward", dailyRate: "1500.00", isOccupied: false, currentPatientId: null },
-      { roomNumber: "201", roomType: "Private Room", dailyRate: "3000.00", isOccupied: true, currentPatientId: 2 },
-      { roomNumber: "301", roomType: "ICU", dailyRate: "8000.00", isOccupied: true, currentPatientId: 3 },
+      { roomNumber: "201", roomType: "Private Room", dailyRate: "3000.00", isOccupied: false, currentPatientId: null },
+      { roomNumber: "301", roomType: "ICU", dailyRate: "8000.00", isOccupied: false, currentPatientId: null },
     ];
 
     await db.insert(rooms).values(sampleRooms);
@@ -311,6 +316,18 @@ export class DatabaseStorage implements IStorage {
       pendingAmount,
       criticalItems: lowStockMeds.filter(med => med.stockQuantity <= 10).length,
     };
+  }
+
+  // Activity Log methods
+  async getActivityLogs(limit: number = 10): Promise<ActivityLog[]> {
+    return await db.select().from(activityLogs)
+      .orderBy(sql`${activityLogs.createdAt} DESC`)
+      .limit(limit);
+  }
+
+  async logActivity(activity: InsertActivityLog): Promise<ActivityLog> {
+    const [newActivity] = await db.insert(activityLogs).values(activity).returning();
+    return newActivity;
   }
 }
 
