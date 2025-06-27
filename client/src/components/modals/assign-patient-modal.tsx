@@ -212,8 +212,8 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-1">
-          <div className="py-6 space-y-6">
+        <ScrollArea className="flex-1 px-1 max-h-[60vh]">
+          <div className="py-6 space-y-6 pr-4">
             {/* Room Details */}
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <h3 className="font-semibold text-professional-dark mb-2">Room Details</h3>
@@ -241,7 +241,7 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
 
           {/* Assignment Form */}
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form id="assign-patient-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
                 name="patientId"
@@ -436,24 +436,26 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
                   </FormItem>
                 )}
               />
-
-              <div className="flex justify-end space-x-3 pt-4 border-t">
-                <Button type="button" variant="outline" onClick={handleClose}>
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={isSubmitting || assignPatientMutation.isPending || !selectedPatient}
-                  className="bg-medical-teal hover:bg-medical-teal/90"
-                >
-                  <UserCheck className="mr-2" size={16} />
-                  {isSubmitting ? "Assigning..." : "Assign Patient"}
-                </Button>
-              </div>
             </form>
           </Form>
           </div>
         </ScrollArea>
+
+        {/* Action buttons outside scrollable area */}
+        <div className="flex justify-end space-x-3 pt-4 border-t flex-shrink-0">
+          <Button type="button" variant="outline" onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button 
+            type="submit"
+            form="assign-patient-form"
+            disabled={isSubmitting || assignPatientMutation.isPending || !selectedPatient}
+            className="bg-medical-teal hover:bg-medical-teal/90"
+          >
+            <UserCheck className="mr-2" size={16} />
+            {isSubmitting ? "Assigning..." : "Assign Patient"}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
