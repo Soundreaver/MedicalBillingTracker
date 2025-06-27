@@ -350,27 +350,18 @@ export default function Rooms() {
                             Assign Patient
                           </Button>
                         )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRoomStatusToggle(room)}
-                          disabled={updateRoomMutation.isPending}
-                          className={room.isOccupied 
-                            ? 'text-urgent-red hover:text-red-700' 
-                            : 'text-success-green hover:text-green-700'}
-                        >
-                          {room.isOccupied ? (
-                            <>
-                              <XCircle className="mr-1" size={14} />
-                              Check Out
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle className="mr-1" size={14} />
-                              Check In
-                            </>
-                          )}
-                        </Button>
+                        {room.isOccupied && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRoomStatusToggle(room)}
+                            disabled={updateRoomMutation.isPending}
+                            className="text-urgent-red hover:text-red-700"
+                          >
+                            <XCircle className="mr-1" size={14} />
+                            Check Out
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -395,6 +386,21 @@ export default function Rooms() {
           onClose={() => setSelectedRoomForAssignment(null)}
         />
       )}
+
+      {selectedRoomForCheckout && showPaymentModal && (() => {
+        const invoice = invoices.find(invoice => 
+          invoice.patientId === selectedRoomForCheckout.currentPatientId && 
+          invoice.outstandingAmount > 0 &&
+          invoice.items.some(item => item.itemType === 'room' && item.itemId === selectedRoomForCheckout.id)
+        );
+        return invoice ? (
+          <PaymentModal
+            invoice={invoice}
+            isOpen={showPaymentModal}
+            onClose={handlePaymentComplete}
+          />
+        ) : null;
+      })()}
     </div>
   );
 }
