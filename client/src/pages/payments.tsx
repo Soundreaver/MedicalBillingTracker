@@ -42,7 +42,7 @@ export default function Payments() {
   }
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-professional-dark">Payments</h1>

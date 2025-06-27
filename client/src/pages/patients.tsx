@@ -28,11 +28,11 @@ export default function Patients() {
   );
 
   if (isLoading) {
-    return <div className="p-8 flex justify-center">Loading...</div>;
+    return <div className="flex justify-center">Loading...</div>;
   }
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-professional-dark">Patients</h1>
