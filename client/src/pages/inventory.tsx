@@ -16,6 +16,7 @@ export default function Inventory() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [isAddMedicineModalOpen, setIsAddMedicineModalOpen] = useState(false);
+  const [isBulkImportModalOpen, setIsBulkImportModalOpen] = useState(false);
   const { toast } = useToast();
 
   const { data: medicines = [], isLoading } = useQuery<Medicine[]>({
@@ -97,13 +98,23 @@ export default function Inventory() {
           <h1 className="text-2xl font-bold text-professional-dark">Medicine Inventory</h1>
           <p className="text-gray-600">Monitor medicine stock and inventory levels</p>
         </div>
-        <Button 
-          className="bg-medical-teal hover:bg-medical-teal/90"
-          onClick={() => setIsAddMedicineModalOpen(true)}
-        >
-          <Plus className="mr-2" size={16} />
-          Add Medicine
-        </Button>
+        <div className="flex space-x-2">
+          <Button 
+            className="bg-medical-teal hover:bg-medical-teal/90"
+            onClick={() => setIsAddMedicineModalOpen(true)}
+          >
+            <Plus className="mr-2" size={16} />
+            Add Medicine
+          </Button>
+          <Button 
+            variant="outline"
+            className="border-medical-teal text-medical-teal hover:bg-medical-teal hover:text-white"
+            onClick={() => setIsBulkImportModalOpen(true)}
+          >
+            <Upload className="mr-2" size={16} />
+            Bulk Import
+          </Button>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -307,6 +318,11 @@ export default function Inventory() {
       <AddMedicineModal 
         isOpen={isAddMedicineModalOpen}
         onClose={() => setIsAddMedicineModalOpen(false)}
+      />
+      
+      <BulkImportModal 
+        isOpen={isBulkImportModalOpen}
+        onClose={() => setIsBulkImportModalOpen(false)}
       />
     </div>
   );
