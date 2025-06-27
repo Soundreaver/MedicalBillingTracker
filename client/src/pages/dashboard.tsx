@@ -147,12 +147,7 @@ export default function Dashboard() {
                       </p>
                     </div>
                   </div>
-                  <Button 
-                    size="sm" 
-                    className={medicine.stockQuantity <= 10 ? 'bg-urgent-red hover:bg-urgent-red/90' : 'bg-yellow-600 hover:bg-yellow-600/90'}
-                  >
-                    Reorder
-                  </Button>
+
                 </div>
               ))}
               

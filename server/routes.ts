@@ -11,8 +11,7 @@ import {
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Seed database on startup
-  await storage.seedData();
+  // Seed users on startup (keeping login credentials)
   await authService.seedUsers();
 
   // Authentication routes (public)

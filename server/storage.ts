@@ -58,40 +58,7 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  async seedData() {
-    // Check if data already exists
-    const existingPatients = await db.select().from(patients).limit(1);
-    if (existingPatients.length > 0) return;
 
-    // Seed patients
-    const samplePatients: InsertPatient[] = [
-      { name: "Md. Rahman", phone: "01712345678", email: "rahman@example.com", address: "Dhaka, Bangladesh", patientId: "PAT-2024-0123" },
-      { name: "Sarah Fatima", phone: "01712345679", email: "sarah@example.com", address: "Chittagong, Bangladesh", patientId: "PAT-2024-0124" },
-      { name: "Ahmed Hassan", phone: "01712345680", email: "ahmed@example.com", address: "Sylhet, Bangladesh", patientId: "PAT-2024-0125" },
-    ];
-
-    await db.insert(patients).values(samplePatients);
-
-    // Seed medicines
-    const sampleMedicines: InsertMedicine[] = [
-      { name: "Paracetamol 500mg", category: "Pain Relief", unitPrice: "5.50", stockQuantity: 45, lowStockThreshold: 50, unit: "tablets" },
-      { name: "Amoxicillin 250mg", category: "Antibiotic", unitPrice: "12.00", stockQuantity: 85, lowStockThreshold: 100, unit: "capsules" },
-      { name: "Insulin 100IU/ml", category: "Diabetes", unitPrice: "450.00", stockQuantity: 120, lowStockThreshold: 50, unit: "vials" },
-      { name: "Omeprazole 20mg", category: "Gastric", unitPrice: "8.75", stockQuantity: 200, lowStockThreshold: 100, unit: "tablets" },
-    ];
-
-    await db.insert(medicines).values(sampleMedicines);
-
-    // Seed rooms
-    const sampleRooms: InsertRoom[] = [
-      { roomNumber: "101", roomType: "General Ward", dailyRate: "1500.00", isOccupied: false, currentPatientId: null },
-      { roomNumber: "102", roomType: "General Ward", dailyRate: "1500.00", isOccupied: false, currentPatientId: null },
-      { roomNumber: "201", roomType: "Private Room", dailyRate: "3000.00", isOccupied: false, currentPatientId: null },
-      { roomNumber: "301", roomType: "ICU", dailyRate: "8000.00", isOccupied: false, currentPatientId: null },
-    ];
-
-    await db.insert(rooms).values(sampleRooms);
-  }
 
   // Patient methods
   async getPatients(): Promise<Patient[]> {
