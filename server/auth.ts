@@ -110,9 +110,10 @@ export class AuthService {
 
   // Clean up expired sessions
   async cleanupExpiredSessions(userId?: number): Promise<void> {
+    const now = new Date();
     const where = userId 
-      ? and(eq(sessions.userId, userId), gt(new Date(), sessions.expiresAt))
-      : gt(new Date(), sessions.expiresAt);
+      ? and(eq(sessions.userId, userId), lt(sessions.expiresAt, now))
+      : lt(sessions.expiresAt, now);
     
     await db.delete(sessions).where(where);
   }
