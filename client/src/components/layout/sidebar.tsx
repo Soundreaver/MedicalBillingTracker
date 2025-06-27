@@ -54,13 +54,13 @@ export default function Sidebar() {
             
             return (
               <Link key={item.path} href={item.path}>
-                <a className={cn(
-                  "flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-medical-teal transition-colors",
+                <div className={cn(
+                  "flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-medical-teal transition-colors cursor-pointer",
                   isActive && "text-medical-teal bg-medical-teal bg-opacity-10 border-r-3 border-medical-teal"
                 )}>
                   <Icon className="mr-3" size={18} />
                   <span className="font-medium">{item.label}</span>
-                </a>
+                </div>
               </Link>
             );
           })}
@@ -75,10 +75,10 @@ export default function Sidebar() {
             
             return (
               <Link key={item.path} href={item.path}>
-                <a className="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-medical-teal transition-colors">
+                <div className="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-medical-teal transition-colors cursor-pointer">
                   <Icon className="mr-3" size={18} />
                   <span className="font-medium">{item.label}</span>
-                </a>
+                </div>
               </Link>
             );
           })}

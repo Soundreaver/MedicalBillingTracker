@@ -9,10 +9,12 @@ import { formatCurrency } from "@/lib/utils";
 import { Medicine } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import AddMedicineModal from "@/components/modals/add-medicine-modal";
 
 export default function Inventory() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [isAddMedicineModalOpen, setIsAddMedicineModalOpen] = useState(false);
   const { toast } = useToast();
 
   const { data: medicines = [], isLoading } = useQuery<Medicine[]>({
