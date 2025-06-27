@@ -303,7 +303,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const createInvoiceSchema = z.object({
-    invoice: insertInvoiceSchema,
+    invoice: insertInvoiceSchema.extend({
+      dueDate: z.string().or(z.date()).transform((val) => new Date(val)),
+    }),
     items: z.array(insertInvoiceItemSchema),
   });
 

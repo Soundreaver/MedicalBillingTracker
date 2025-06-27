@@ -183,7 +183,7 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
         ...data.invoice,
         totalAmount: total.toString(), // Convert to string for decimal
         paidAmount: data.invoice.paidAmount || "0", // Keep as string for decimal
-        dueDate: new Date(data.invoice.dueDate), // Ensure it's a Date object
+        dueDate: data.invoice.dueDate.toISOString(), // Send as ISO string
       },
       items: formattedItems,
     });
@@ -193,7 +193,7 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
         ...data.invoice,
         totalAmount: total.toString(), // Convert to string for decimal
         paidAmount: data.invoice.paidAmount || "0", // Keep as string for decimal
-        dueDate: new Date(data.invoice.dueDate), // Ensure it's a Date object
+        dueDate: data.invoice.dueDate.toISOString(), // Send as ISO string
       },
       items: formattedItems,
     });
