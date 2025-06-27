@@ -64,6 +64,13 @@ The system uses a PostgreSQL database with the following main entities:
 - Outstanding balance tracking
 - Payment reference management
 
+### Admin Settings
+- Medicine categories management with descriptions
+- Room types configuration with base pricing
+- Direct medicine creation from admin panel
+- Direct room creation from admin panel
+- Centralized system configuration interface
+
 ## Data Flow
 
 1. **Patient Registration**: New patients are registered with unique IDs and stored in the patients table
@@ -118,6 +125,7 @@ The system uses a PostgreSQL database with the following main entities:
 ## Changelog
 
 - June 27, 2025. Initial setup
+- June 27, 2025. Added comprehensive admin settings page with medicine categories, room types configuration, and direct creation interfaces
 
 ## User Preferences
 
