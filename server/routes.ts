@@ -253,7 +253,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/rooms/:id", async (req, res) => {
+  app.put("/api/rooms/:id", authenticate, requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const result = insertRoomSchema.partial().safeParse(req.body);
@@ -271,7 +271,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Invoices
-  app.get("/api/invoices", async (req, res) => {
+  app.get("/api/invoices", authenticate, async (req, res) => {
     try {
       const invoices = await storage.getInvoices();
       res.json(invoices);
@@ -280,7 +280,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/invoices/outstanding", async (req, res) => {
+  app.get("/api/invoices/outstanding", authenticate, async (req, res) => {
     try {
       const invoices = await storage.getOutstandingInvoices();
       res.json(invoices);
@@ -289,7 +289,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/invoices/:id", async (req, res) => {
+  app.get("/api/invoices/:id", authenticate, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const invoice = await storage.getInvoice(id);
@@ -307,7 +307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     items: z.array(insertInvoiceItemSchema),
   });
 
-  app.post("/api/invoices", async (req, res) => {
+  app.post("/api/invoices", authenticate, requireDoctorOrAdmin, async (req, res) => {
     try {
       const result = createInvoiceSchema.safeParse(req.body);
       if (!result.success) {
@@ -321,7 +321,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Payments
-  app.get("/api/payments", async (req, res) => {
+  app.get("/api/payments", authenticate, async (req, res) => {
     try {
       const payments = await storage.getPayments();
       res.json(payments);
@@ -330,7 +330,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/payments", async (req, res) => {
+  app.post("/api/payments", authenticate, requireDoctorOrAdmin, async (req, res) => {
     try {
       const result = insertPaymentSchema.safeParse(req.body);
       if (!result.success) {
@@ -343,7 +343,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/invoices/:id/payments", async (req, res) => {
+  app.get("/api/invoices/:id/payments", authenticate, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const payments = await storage.getInvoicePayments(id);
@@ -354,7 +354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dashboard
-  app.get("/api/dashboard/stats", async (req, res) => {
+  app.get("/api/dashboard/stats", authenticate, async (req, res) => {
     try {
       const stats = await storage.getDashboardStats();
       res.json(stats);
