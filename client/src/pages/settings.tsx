@@ -84,19 +84,19 @@ export default function Settings() {
   });
 
   // Mock data for categories and room types (would come from API in real implementation)
-  const medicineCategories = [
+  const [medicineCategories, setMedicineCategories] = useState([
     { id: 1, name: "Analgesics", description: "Pain relief medications" },
     { id: 2, name: "Antibiotics", description: "Infection treatment medications" },
     { id: 3, name: "Antacids", description: "Stomach acid relief medications" },
     { id: 4, name: "Vitamins", description: "Nutritional supplements" },
-  ];
+  ]);
 
-  const roomTypes = [
+  const [roomTypes, setRoomTypes] = useState([
     { id: 1, name: "Standard Room", basePrice: "2000.00", description: "Basic room with essential amenities" },
     { id: 2, name: "Private Room", basePrice: "3500.00", description: "Single occupancy room with private facilities" },
     { id: 3, name: "Deluxe Room", basePrice: "5000.00", description: "Premium room with enhanced comfort" },
     { id: 4, name: "ICU", basePrice: "8000.00", description: "Intensive care unit with specialized equipment" },
-  ];
+  ]);
 
   // Forms
   const categoryForm = useForm<MedicineCategoryFormData>({
@@ -189,21 +189,66 @@ export default function Settings() {
   });
 
   const onSubmitCategory = (data: MedicineCategoryFormData) => {
-    // Mock implementation - would call API
-    toast({
-      title: "Success",
-      description: "Medicine category added successfully",
-    });
+    if (editingCategory) {
+      // Update existing category
+      setMedicineCategories(prev => 
+        prev.map(cat => 
+          cat.id === parseInt(editingCategory) 
+            ? { ...cat, name: data.name, description: data.description || "" }
+            : cat
+        )
+      );
+      toast({
+        title: "Success",
+        description: "Category updated successfully",
+      });
+      setEditingCategory(null);
+    } else {
+      // Add new category
+      const newId = Math.max(...medicineCategories.map(c => c.id)) + 1;
+      setMedicineCategories(prev => [...prev, {
+        id: newId,
+        name: data.name,
+        description: data.description || ""
+      }]);
+      toast({
+        title: "Success",
+        description: "Category added successfully",
+      });
+    }
     categoryForm.reset();
     setIsAddingCategory(false);
   };
 
   const onSubmitRoomType = (data: RoomTypeFormData) => {
-    // Mock implementation - would call API
-    toast({
-      title: "Success",
-      description: "Room type added successfully",
-    });
+    if (editingRoomType) {
+      // Update existing room type
+      setRoomTypes(prev => 
+        prev.map(room => 
+          room.id === parseInt(editingRoomType)
+            ? { ...room, name: data.name, basePrice: data.basePrice, description: data.description || "" }
+            : room
+        )
+      );
+      toast({
+        title: "Success",
+        description: "Room type updated successfully",
+      });
+      setEditingRoomType(null);
+    } else {
+      // Add new room type
+      const newId = Math.max(...roomTypes.map(r => r.id)) + 1;
+      setRoomTypes(prev => [...prev, {
+        id: newId,
+        name: data.name,
+        basePrice: data.basePrice,
+        description: data.description || ""
+      }]);
+      toast({
+        title: "Success",
+        description: "Room type added successfully",
+      });
+    }
     roomTypeForm.reset();
     setIsAddingRoomType(false);
   };
@@ -214,6 +259,48 @@ export default function Settings() {
 
   const onSubmitRoom = (data: AddRoomFormData) => {
     addRoomMutation.mutate(data);
+  };
+
+  // Category management functions
+  const handleEditCategory = (categoryId: number) => {
+    const category = medicineCategories.find(c => c.id === categoryId);
+    if (category) {
+      categoryForm.setValue("name", category.name);
+      categoryForm.setValue("description", category.description || "");
+      setEditingCategory(categoryId.toString());
+      setIsAddingCategory(true);
+    }
+  };
+
+  const handleDeleteCategory = (categoryId: number) => {
+    if (confirm("Are you sure you want to delete this category?")) {
+      setMedicineCategories(prev => prev.filter(c => c.id !== categoryId));
+      toast({
+        title: "Success",
+        description: "Category deleted successfully",
+      });
+    }
+  };
+
+  const handleEditRoomType = (roomTypeId: number) => {
+    const roomType = roomTypes.find(r => r.id === roomTypeId);
+    if (roomType) {
+      roomTypeForm.setValue("name", roomType.name);
+      roomTypeForm.setValue("basePrice", roomType.basePrice);
+      roomTypeForm.setValue("description", roomType.description || "");
+      setEditingRoomType(roomTypeId.toString());
+      setIsAddingRoomType(true);
+    }
+  };
+
+  const handleDeleteRoomType = (roomTypeId: number) => {
+    if (confirm("Are you sure you want to delete this room type?")) {
+      setRoomTypes(prev => prev.filter(r => r.id !== roomTypeId));
+      toast({
+        title: "Success",
+        description: "Room type deleted successfully",
+      });
+    }
   };
 
   return (
@@ -316,10 +403,19 @@ export default function Settings() {
                       <p className="text-sm text-gray-600">{category.description}</p>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleEditCategory(category.id)}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-red-600 hover:text-red-700"
+                        onClick={() => handleDeleteCategory(category.id)}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
