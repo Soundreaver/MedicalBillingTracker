@@ -111,6 +111,8 @@ export const insertMedicineSchema = createInsertSchema(medicines).omit({
 
 export const insertRoomSchema = createInsertSchema(rooms).omit({
   id: true,
+}).extend({
+  dailyRate: z.union([z.string(), z.number()]).transform(val => val.toString()),
 });
 
 export const insertInvoiceSchema = createInsertSchema(invoices).omit({

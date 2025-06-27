@@ -215,6 +215,19 @@ export class DatabaseStorage implements IStorage {
     const invoiceItemsWithId = items.map(item => ({ ...item, invoiceId: newInvoice.id }));
     await db.insert(invoiceItems).values(invoiceItemsWithId);
 
+    // Update medicine stock for medicine items
+    for (const item of items) {
+      if (item.itemType === 'medicine' && item.itemId) {
+        const [currentMedicine] = await db.select().from(medicines).where(eq(medicines.id, item.itemId));
+        if (currentMedicine) {
+          const newStock = currentMedicine.stockQuantity - item.quantity;
+          await db.update(medicines)
+            .set({ stockQuantity: Math.max(0, newStock) })
+            .where(eq(medicines.id, item.itemId));
+        }
+      }
+    }
+
     const result = await this.getInvoice(newInvoice.id);
     if (!result) throw new Error("Failed to create invoice");
     return result;

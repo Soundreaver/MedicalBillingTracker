@@ -4,19 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Bed, Users, CheckCircle, XCircle, UserPlus } from "lucide-react";
+import { Search, Bed, Users, CheckCircle, XCircle, UserPlus } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { Room, RoomOccupancy, Patient } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import AddRoomModal from "@/components/modals/add-room-modal";
 import AssignPatientModal from "@/components/modals/assign-patient-modal";
 
 export default function Rooms() {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [isAddRoomModalOpen, setIsAddRoomModalOpen] = useState(false);
   const [selectedRoomForAssignment, setSelectedRoomForAssignment] = useState<Room | null>(null);
   const { toast } = useToast();
 
@@ -100,15 +98,8 @@ export default function Rooms() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-professional-dark">Room Management</h1>
-          <p className="text-gray-600">Manage room occupancy and charges</p>
+          <p className="text-gray-600">Manage room occupancy and patient assignments</p>
         </div>
-        <Button 
-          className="bg-medical-teal hover:bg-medical-teal/90"
-          onClick={() => setIsAddRoomModalOpen(true)}
-        >
-          <Plus className="mr-2" size={16} />
-          Add Room
-        </Button>
       </div>
 
       {/* Summary Cards */}
@@ -348,11 +339,6 @@ export default function Rooms() {
         </CardContent>
       </Card>
 
-      <AddRoomModal
-        isOpen={isAddRoomModalOpen}
-        onClose={() => setIsAddRoomModalOpen(false)}
-      />
-      
       {selectedRoomForAssignment && (
         <AssignPatientModal
           room={selectedRoomForAssignment}
