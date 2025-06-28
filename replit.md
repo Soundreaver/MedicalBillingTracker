@@ -126,6 +126,9 @@ The system uses a PostgreSQL database with the following main entities:
 
 - June 27, 2025. Initial setup
 - June 27, 2025. Added comprehensive admin settings page with medicine categories, room types configuration, and direct creation interfaces
+- June 27, 2025. Fixed room checkout cancellation bug - payment modal now properly separates cancel vs payment completion actions
+- June 27, 2025. Removed duplicate X buttons from all modals by removing manual close buttons since DialogContent provides them automatically
+- June 27, 2025. Simplified room creation by removing redundant daily rate field since room types already define pricing
 
 ## User Preferences
 
