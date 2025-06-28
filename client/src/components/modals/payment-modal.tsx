@@ -20,6 +20,7 @@ interface PaymentModalProps {
   invoice: InvoiceWithDetails;
   isOpen: boolean;
   onClose: () => void;
+  onPaymentSuccess?: () => void;
 }
 
 const paymentFormSchema = insertPaymentSchema.extend({
@@ -40,7 +41,7 @@ const paymentMethods = [
   "Check"
 ];
 
-export default function PaymentModal({ invoice, isOpen, onClose }: PaymentModalProps) {
+export default function PaymentModal({ invoice, isOpen, onClose, onPaymentSuccess }: PaymentModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
@@ -72,6 +73,7 @@ export default function PaymentModal({ invoice, isOpen, onClose }: PaymentModalP
         title: "Success",
         description: "Payment recorded successfully",
       });
+      onPaymentSuccess?.();
       onClose();
     },
     onError: () => {
@@ -105,17 +107,10 @@ export default function PaymentModal({ invoice, isOpen, onClose }: PaymentModalP
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader className="border-b pb-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <DialogTitle className="text-xl font-bold text-professional-dark">
-                Record Payment
-              </DialogTitle>
-              <p className="text-gray-600 mt-1">Invoice: {invoice.invoiceNumber}</p>
-            </div>
-            <Button variant="ghost" size="icon" onClick={handleClose}>
-              <X size={16} />
-            </Button>
-          </div>
+          <DialogTitle className="text-xl font-bold text-professional-dark">
+            Record Payment
+          </DialogTitle>
+          <p className="text-gray-600 mt-1">Invoice: {invoice.invoiceNumber}</p>
         </DialogHeader>
 
         <div className="space-y-6">

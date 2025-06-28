@@ -199,17 +199,10 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader className="border-b pb-4 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div>
-              <DialogTitle className="text-xl font-bold text-professional-dark">
-                Assign Patient to Room
-              </DialogTitle>
-              <p className="text-gray-600 mt-1">Room {room.roomNumber} - {room.roomType}</p>
-            </div>
-            <Button variant="ghost" size="icon" onClick={handleClose}>
-              <X size={16} />
-            </Button>
-          </div>
+          <DialogTitle className="text-xl font-bold text-professional-dark">
+            Assign Patient to Room
+          </DialogTitle>
+          <p className="text-gray-600 mt-1">Room {room.roomNumber} - {room.roomType}</p>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-scroll px-1 max-h-[40vh] border border-gray-200 rounded scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">

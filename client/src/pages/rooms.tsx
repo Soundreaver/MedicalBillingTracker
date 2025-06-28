@@ -397,7 +397,11 @@ export default function Rooms() {
           <PaymentModal
             invoice={invoice}
             isOpen={showPaymentModal}
-            onClose={handlePaymentComplete}
+            onClose={() => {
+              setShowPaymentModal(false);
+              setSelectedRoomForCheckout(null);
+            }}
+            onPaymentSuccess={handlePaymentComplete}
           />
         ) : null;
       })()}
