@@ -58,8 +58,9 @@ const addMedicineFormSchema = insertMedicineSchema.extend({
 type AddMedicineFormData = z.infer<typeof addMedicineFormSchema>;
 
 // Room Form Schema (for adding rooms from settings)
-const addRoomFormSchema = insertRoomSchema.extend({
-  dailyRate: z.string().min(1, "Daily rate is required"),
+const addRoomFormSchema = z.object({
+  roomNumber: z.string().min(1, "Room number is required"),
+  roomType: z.string().min(1, "Room type is required"),
 });
 
 type AddRoomFormData = z.infer<typeof addRoomFormSchema>;
@@ -132,7 +133,6 @@ export default function Settings() {
     defaultValues: {
       roomNumber: "",
       roomType: "",
-      dailyRate: "",
     },
   });
 
@@ -165,7 +165,7 @@ export default function Settings() {
   });
 
   const addRoomMutation = useMutation({
-    mutationFn: async (data: AddRoomFormData) => {
+    mutationFn: async (data: any) => {
       const response = await apiRequest("POST", "/api/rooms", data);
       return response.json();
     },
@@ -258,7 +258,20 @@ export default function Settings() {
   };
 
   const onSubmitRoom = (data: AddRoomFormData) => {
-    addRoomMutation.mutate(data);
+    // Find the selected room type and set the daily rate
+    const selectedRoomType = roomTypes.find(rt => rt.name === data.roomType);
+    const dailyRate = selectedRoomType ? selectedRoomType.basePrice : "0";
+    
+    // Create complete room data for the API
+    const roomData = {
+      roomNumber: data.roomNumber,
+      roomType: data.roomType,
+      dailyRate: dailyRate,
+      isOccupied: false,
+      currentPatientId: null
+    };
+    
+    addRoomMutation.mutate(roomData);
   };
 
   // Category management functions
@@ -730,24 +743,7 @@ export default function Settings() {
                         </FormItem>
                       )}
                     />
-                    <FormField
-                      control={roomForm.control}
-                      name="dailyRate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Daily Rate (BDT) *</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              step="0.01" 
-                              placeholder="0.00" 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+
                   </div>
                   <div className="flex justify-end space-x-3">
                     <Button 
