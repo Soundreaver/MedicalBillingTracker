@@ -42,6 +42,7 @@ export const medicines = pgTable("medicines", {
   name: varchar("name", { length: 255 }).notNull(),
   category: varchar("category", { length: 100 }),
   unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  buyPrice: decimal("buy_price", { precision: 10, scale: 2 }).notNull(),
   stockQuantity: integer("stock_quantity").notNull().default(0),
   lowStockThreshold: integer("low_stock_threshold").notNull().default(50),
   unit: varchar("unit", { length: 50 }).notNull().default("units"),
@@ -54,6 +55,8 @@ export const rooms = pgTable("rooms", {
   dailyRate: decimal("daily_rate", { precision: 10, scale: 2 }).notNull(),
   isOccupied: boolean("is_occupied").notNull().default(false),
   currentPatientId: integer("current_patient_id").references(() => patients.id),
+  checkInDate: timestamp("check_in_date"),
+  currentInvoiceId: integer("current_invoice_id").references(() => invoices.id),
 });
 
 export const invoices = pgTable("invoices", {
@@ -99,6 +102,17 @@ export const activityLogs = pgTable("activity_logs", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const patientDocuments = pgTable("patient_documents", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id").notNull().references(() => patients.id),
+  documentType: varchar("document_type", { length: 50 }).notNull(), // report, xray, scan, prescription, etc
+  documentName: varchar("document_name", { length: 255 }).notNull(),
+  documentUrl: varchar("document_url", { length: 500 }),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertPatientSchema = createInsertSchema(patients).omit({
   id: true,
@@ -128,6 +142,12 @@ export const insertInvoiceItemSchema = createInsertSchema(invoiceItems).omit({
 export const insertPaymentSchema = createInsertSchema(payments).omit({
   id: true,
   paymentDate: true,
+});
+
+export const insertPatientDocumentSchema = createInsertSchema(patientDocuments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 // User schemas
@@ -190,6 +210,9 @@ export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({
 });
 
 export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
+
+export type PatientDocument = typeof patientDocuments.$inferSelect;
+export type InsertPatientDocument = z.infer<typeof insertPatientDocumentSchema>;
 
 // Extended types for API responses
 export type InvoiceWithDetails = Invoice & {
