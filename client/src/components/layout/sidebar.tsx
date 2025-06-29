@@ -17,7 +17,6 @@ const mainMenuItems = [
   { path: "/", label: "Dashboard", icon: BarChart3 },
   { path: "/patients", label: "Patients", icon: Users },
   { path: "/billing", label: "Billing & Invoices", icon: FileText },
-  { path: "/payments", label: "Payments", icon: CreditCard },
   { path: "/inventory", label: "Medicine Inventory", icon: PillBottle },
   { path: "/rooms", label: "Room Management", icon: Bed },
 ];

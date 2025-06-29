@@ -24,8 +24,6 @@ export default function Dashboard() {
     return <div>Loading...</div>;
   }
 
-
-
   return (
     <div className="space-y-8">
       <StatsCards stats={stats} />
@@ -41,12 +39,7 @@ export default function Dashboard() {
         {/* Medicine Inventory Alerts */}
         <Card className="border border-gray-200">
           <CardHeader className="border-b border-gray-200">
-            <div className="flex items-center justify-between">
               <CardTitle className="text-lg font-semibold text-professional-dark">Medicine Inventory Alerts</CardTitle>
-              <Button variant="ghost" size="sm" className="text-medical-teal hover:text-soft-blue">
-                View All
-              </Button>
-            </div>
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-4">
@@ -92,12 +85,7 @@ export default function Dashboard() {
         {/* Room Occupancy Status */}
         <Card className="border border-gray-200">
           <CardHeader className="border-b border-gray-200">
-            <div className="flex items-center justify-between">
               <CardTitle className="text-lg font-semibold text-professional-dark">Room Occupancy Status</CardTitle>
-              <Button variant="ghost" size="sm" className="text-medical-teal hover:text-soft-blue">
-                View All
-              </Button>
-            </div>
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-4">
@@ -112,19 +100,6 @@ export default function Dashboard() {
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-600">Available</span>
                 <span className="text-sm font-bold text-success-green">{roomOccupancy.available}</span>
-              </div>
-              
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-600">Occupancy Rate</span>
-                  <span className="text-sm font-bold text-professional-dark">{roomOccupancy.occupancyRate}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-medical-teal h-2 rounded-full" 
-                    style={{ width: `${roomOccupancy.occupancyRate}%` }}
-                  ></div>
-                </div>
               </div>
               
               <div className="mt-4 pt-4 border-t border-gray-200">
@@ -145,10 +120,6 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      <CreateInvoiceModal
-        isOpen={showCreateInvoice}
-        onClose={() => setShowCreateInvoice(false)}
-      />
     </div>
   );
 }
