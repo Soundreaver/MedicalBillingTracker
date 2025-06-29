@@ -137,6 +137,7 @@ The system uses a PostgreSQL database with the following main entities:
 - June 29, 2025. Replaced critical items card in medicine inventory with profit card that calculates actual profit from medicine sales in invoices
 - June 29, 2025. Fixed invoice payment display bug by adding paidAmount field to InvoiceWithDetails type and storage methods
 - June 29, 2025. Fixed room assignment validation errors by updating room schema to properly handle checkInDate timestamp transformations
+- June 29, 2025. Fixed invoice creation error for room assignments by handling empty invoice items array in createInvoice method
 
 ## User Preferences
 
