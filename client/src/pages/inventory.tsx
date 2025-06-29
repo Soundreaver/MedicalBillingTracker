@@ -26,7 +26,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
-import { Search, Plus, Package, AlertTriangle, Edit, TrendingDown, Upload, MoreHorizontal, Trash2, Eye } from "lucide-react";
+import { Search, Plus, Package, AlertTriangle, Edit, TrendingDown, Upload, MoreHorizontal, Trash2, Eye, Target } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { Medicine } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -49,6 +49,10 @@ export default function Inventory() {
 
   const { data: lowStockMedicines = [] } = useQuery<Medicine[]>({
     queryKey: ["/api/medicines/low-stock"],
+  });
+
+  const { data: invoices = [] } = useQuery<any[]>({
+    queryKey: ["/api/invoices"],
   });
 
   const updateMedicineMutation = useMutation({
@@ -132,7 +136,22 @@ export default function Inventory() {
   };
 
   const totalValue = medicines.reduce((sum, med) => sum + (parseFloat(med.unitPrice) * med.stockQuantity), 0);
-  const criticalItems = medicines.filter(med => med.stockQuantity <= 10).length;
+  
+  // Calculate total profit from medicines sold in invoices
+  const totalProfit = invoices.reduce((profit: number, invoice: any) => {
+    if (invoice.items) {
+      return profit + invoice.items.reduce((itemProfit: number, item: any) => {
+        const medicine = medicines.find(med => med.id === item.medicineId);
+        if (medicine) {
+          const sellPrice = parseFloat(medicine.unitPrice);
+          const buyPrice = parseFloat(medicine.buyPrice);
+          return itemProfit + ((sellPrice - buyPrice) * item.quantity);
+        }
+        return itemProfit;
+      }, 0);
+    }
+    return profit;
+  }, 0);
 
   if (isLoading) {
     return <div className="flex justify-center">Loading...</div>;
@@ -212,11 +231,11 @@ export default function Inventory() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Critical Items</p>
-                <p className="text-2xl font-bold text-urgent-red mt-2">{criticalItems}</p>
+                <p className="text-sm font-medium text-gray-600">Total Profit</p>
+                <p className="text-2xl font-bold text-success-green mt-2">{formatCurrency(totalProfit)}</p>
               </div>
-              <div className="w-12 h-12 bg-urgent-red/10 rounded-lg flex items-center justify-center">
-                <AlertTriangle className="text-urgent-red" size={20} />
+              <div className="w-12 h-12 bg-success-green/10 rounded-lg flex items-center justify-center">
+                <Target className="text-success-green" size={20} />
               </div>
             </div>
           </CardContent>
