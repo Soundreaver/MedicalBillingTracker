@@ -483,7 +483,7 @@ export class DatabaseStorage implements IStorage {
       
       // Log the activity
       await this.logActivity({
-        type: 'billing',
+        type: 'room',
         title: `Room charges updated for Room ${room.roomNumber}`,
         description: `Daily room charges processed: ${daysDiff} day(s) = ${formatCurrency(totalRoomCharges.toString())}`,
         relatedId: room.id

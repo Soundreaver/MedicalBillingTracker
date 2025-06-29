@@ -1,7 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, CreditCard, Package, BarChart3 } from "lucide-react";
+import { Plus, CreditCard, Package, BarChart3, Clock } from "lucide-react";
 import StatsCards from "@/components/stats-cards";
 import RecentActivity from "@/components/recent-activity";
 import OutstandingInvoicesTable from "@/components/outstanding-invoices-table";
@@ -9,9 +9,35 @@ import { DashboardStats, RoomOccupancy, Medicine } from "@shared/schema";
 import { formatCurrency } from "@/lib/utils";
 import { useState } from "react";
 import CreateInvoiceModal from "@/components/modals/create-invoice-modal";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
   const [showCreateInvoice, setShowCreateInvoice] = useState(false);
+  const { toast } = useToast();
+
+  const processDailyChargesMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/rooms/process-daily-charges");
+      return await response.json();
+    },
+    onSuccess: (data: { processed: number; totalCharges: number }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/activity-logs"] });
+      toast({
+        title: "Daily Charges Processed",
+        description: `Updated ${data.processed} room(s) with total charges of ${formatCurrency(data.totalCharges.toString())}`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to process daily room charges",
+        variant: "destructive",
+      });
+    },
+  });
 
   const { data: stats } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
@@ -52,11 +78,11 @@ export default function Dashboard() {
       onClick: () => {},
     },
     {
-      title: "Generate Reports",
-      description: "View billing and payment reports",
-      icon: BarChart3,
-      color: "bg-urgent-red",
-      onClick: () => {},
+      title: "Process Daily Charges",
+      description: "Update room charges for occupied rooms",
+      icon: Clock,
+      color: "bg-purple-500",
+      onClick: () => processDailyChargesMutation.mutate(),
     },
   ];
 
