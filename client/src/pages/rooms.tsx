@@ -79,10 +79,12 @@ export default function Rooms() {
   const handleRoomStatusToggle = (room: Room) => {
     if (room.isOccupied) {
       // For checkout, find the outstanding invoice for this patient and room
+      // This includes both old invoices with room items and new room assignment invoices
       const outstandingInvoice = invoices.find(invoice => 
         invoice.patientId === room.currentPatientId && 
         invoice.outstandingAmount > 0 &&
-        invoice.items.some(item => item.itemType === 'room' && item.itemId === room.id)
+        (invoice.items.some(item => item.itemType === 'room' && item.itemId === room.id) ||
+         (invoice.description && invoice.description.includes(`Room assignment: ${room.roomNumber}`)))
       );
 
       if (outstandingInvoice) {
@@ -391,7 +393,8 @@ export default function Rooms() {
         const invoice = invoices.find(invoice => 
           invoice.patientId === selectedRoomForCheckout.currentPatientId && 
           invoice.outstandingAmount > 0 &&
-          invoice.items.some(item => item.itemType === 'room' && item.itemId === selectedRoomForCheckout.id)
+          (invoice.items.some(item => item.itemType === 'room' && item.itemId === selectedRoomForCheckout.id) ||
+           (invoice.description && invoice.description.includes(`Room assignment: ${selectedRoomForCheckout.roomNumber}`)))
         );
         return invoice ? (
           <PaymentModal
