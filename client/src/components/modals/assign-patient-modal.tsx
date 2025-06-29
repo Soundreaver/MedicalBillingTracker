@@ -31,7 +31,6 @@ const medicineItemSchema = z.object({
 
 const assignPatientSchema = z.object({
   patientId: z.string().min(1, "Please select a patient"),
-  stayDuration: z.number().min(1, "Stay duration must be at least 1 day"),
   notes: z.string().optional(),
   medicines: z.array(medicineItemSchema).optional(),
 });
@@ -58,7 +57,6 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
     resolver: zodResolver(assignPatientSchema),
     defaultValues: {
       patientId: "",
-      stayDuration: 1,
       notes: "",
       medicines: [],
     },

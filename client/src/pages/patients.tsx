@@ -4,15 +4,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Eye, FileText } from "lucide-react";
+import { Search, Plus, Eye, FileText, Edit } from "lucide-react";
 import { formatDate, getInitials } from "@/lib/utils";
 import { Patient, InvoiceWithDetails } from "@shared/schema";
 import AddPatientModal from "@/components/modals/add-patient-modal";
+import EditPatientModal from "@/components/modals/edit-patient-modal";
 
 export default function Patients() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [isAddPatientModalOpen, setIsAddPatientModalOpen] = useState(false);
+  const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
+  const [isEditPatientModalOpen, setIsEditPatientModalOpen] = useState(false);
 
   const { data: patients = [], isLoading } = useQuery<Patient[]>({
     queryKey: ["/api/patients"],
@@ -28,6 +31,16 @@ export default function Patients() {
     patient.patientId.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (patient.phone && patient.phone.includes(searchTerm))
   );
+
+  const handleEditPatient = (patient: Patient) => {
+    setEditingPatient(patient);
+    setIsEditPatientModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditPatientModalOpen(false);
+    setEditingPatient(null);
+  };
 
   if (isLoading) {
     return <div className="flex justify-center">Loading...</div>;
@@ -119,8 +132,12 @@ export default function Patients() {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     Patient Details
-                    <Button variant="outline" size="sm">
-                      <Eye className="mr-2" size={14} />
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleEditPatient(selectedPatient)}
+                    >
+                      <Edit className="mr-2" size={14} />
                       Edit
                     </Button>
                   </CardTitle>
@@ -214,6 +231,12 @@ export default function Patients() {
       <AddPatientModal
         isOpen={isAddPatientModalOpen}
         onClose={() => setIsAddPatientModalOpen(false)}
+      />
+
+      <EditPatientModal
+        patient={editingPatient}
+        isOpen={isEditPatientModalOpen}
+        onClose={handleCloseEditModal}
       />
     </div>
   );
