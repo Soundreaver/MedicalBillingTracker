@@ -276,25 +276,7 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
                 </div>
               )}
 
-              <FormField
-                control={form.control}
-                name="stayDuration"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Expected Stay Duration (Days) *</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="1"
-                        placeholder="Enter number of days"
-                        {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
 
               {/* Medicine Selection */}
               <div className="space-y-4">
@@ -373,9 +355,12 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span>Room charges ({form.watch("stayDuration") || 1} day{(form.watch("stayDuration") || 1) > 1 ? 's' : ''}):</span>
-                      <span>{formatCurrency((parseFloat(room.dailyRate) * (form.watch("stayDuration") || 1)).toString())}</span>
+                    <div className="flex justify-between text-gray-600">
+                      <span>Room daily rate:</span>
+                      <span>{formatCurrency(room.dailyRate)} per day</span>
+                    </div>
+                    <div className="text-sm text-gray-500 italic">
+                      Room charges will accumulate daily and be added to the invoice automatically
                     </div>
                     {selectedMedicines.length > 0 && (
                       <div className="flex justify-between">
@@ -387,7 +372,7 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
                       </div>
                     )}
                     <div className="border-t pt-2 flex justify-between font-semibold text-lg">
-                      <span>Total Amount:</span>
+                      <span>Initial Amount:</span>
                       <span className="text-medical-teal">{formatCurrency(calculateTotal().toString())}</span>
                     </div>
                   </div>
