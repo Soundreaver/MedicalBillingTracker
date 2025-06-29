@@ -6,7 +6,7 @@ import { authenticate, requireAdmin, requireDoctorOrAdmin } from "./middleware";
 import { 
   insertPatientSchema, insertMedicineSchema, insertRoomSchema, 
   insertInvoiceSchema, insertInvoiceItemSchema, insertPaymentSchema,
-  loginSchema, updateUserSchema, changePasswordSchema
+  insertPatientDocumentSchema, loginSchema, updateUserSchema, changePasswordSchema
 } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -188,6 +188,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(invoices);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch patient invoices" });
+    }
+  });
+
+  app.put("/api/patients/:id", authenticate, requireDoctorOrAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const result = insertPatientSchema.partial().safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid patient data", errors: result.error.errors });
+      }
+      const patient = await storage.updatePatient(id, result.data);
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found" });
+      }
+      res.json(patient);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update patient" });
+    }
+  });
+
+  // Patient Documents
+  app.get("/api/patients/:id/documents", authenticate, async (req, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const documents = await storage.getPatientDocuments(patientId);
+      res.json(documents);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch patient documents" });
+    }
+  });
+
+  app.post("/api/patients/:id/documents", authenticate, requireDoctorOrAdmin, async (req, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const result = insertPatientDocumentSchema.safeParse({ ...req.body, patientId });
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid document data", errors: result.error.errors });
+      }
+      const document = await storage.createPatientDocument(result.data);
+      res.status(201).json(document);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create document" });
+    }
+  });
+
+  app.put("/api/documents/:id", authenticate, requireDoctorOrAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const result = insertPatientDocumentSchema.partial().safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid document data", errors: result.error.errors });
+      }
+      const document = await storage.updatePatientDocument(id, result.data);
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      res.json(document);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update document" });
+    }
+  });
+
+  app.delete("/api/documents/:id", authenticate, requireDoctorOrAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deletePatientDocument(id);
+      res.json({ message: "Document deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete document" });
     }
   });
 

@@ -332,6 +332,7 @@ export class DatabaseStorage implements IStorage {
   async getDashboardStats(): Promise<DashboardStats> {
     const allInvoices = await this.getInvoices();
     const lowStockMeds = await this.getLowStockMedicines();
+    const allMedicines = await this.getMedicines();
     
     const totalOutstanding = allInvoices.reduce((sum, inv) => sum + inv.outstandingAmount, 0);
     const pendingInvoices = allInvoices.filter(inv => inv.outstandingAmount > 0).length;
@@ -347,6 +348,20 @@ export class DatabaseStorage implements IStorage {
       })
       .reduce((sum, inv) => sum + parseFloat(inv.totalAmount), 0);
 
+    // Calculate total profit from medicine sales
+    let totalProfit = 0;
+    for (const invoice of allInvoices) {
+      for (const item of invoice.items) {
+        if (item.itemType === 'medicine') {
+          const medicine = allMedicines.find(med => med.id === item.itemId);
+          if (medicine) {
+            const profit = (parseFloat(item.unitPrice) - parseFloat(medicine.buyPrice)) * item.quantity;
+            totalProfit += profit;
+          }
+        }
+      }
+    }
+
     return {
       totalOutstanding,
       monthlyRevenue,
@@ -355,7 +370,7 @@ export class DatabaseStorage implements IStorage {
       outstandingChange: 0, // Placeholder - would need historical data
       revenueChange: 0, // Placeholder - would need historical data
       pendingAmount,
-      criticalItems: lowStockMeds.filter(med => med.stockQuantity <= 10).length,
+      totalProfit,
     };
   }
 

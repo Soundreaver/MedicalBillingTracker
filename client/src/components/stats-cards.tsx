@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, DollarSign, AlertTriangle, FileText, PillBottle } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, AlertTriangle, FileText, PillBottle, Target } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { DashboardStats } from "@shared/schema";
 
@@ -37,13 +37,13 @@ export default function StatsCards({ stats }: StatsCardsProps) {
       iconBg: "bg-soft-blue/10",
     },
     {
-      title: "Low Stock Alerts",
-      value: stats.lowStockItems.toString(),
-      change: `${stats.criticalItems} critical items`,
-      changeType: "negative" as const,
-      icon: PillBottle,
-      iconColor: "text-urgent-red",
-      iconBg: "bg-urgent-red/10",
+      title: "Total Profit",
+      value: formatCurrency(stats.totalProfit),
+      change: `${stats.lowStockItems} items low stock`,
+      changeType: "positive" as const,
+      icon: Target,
+      iconColor: "text-success-green",
+      iconBg: "bg-success-green/10",
     },
   ];
 
