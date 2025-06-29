@@ -68,7 +68,7 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
       const roomResponse = await apiRequest("PUT", `/api/rooms/${room.id}`, {
         isOccupied: true,
         currentPatientId: parseInt(data.patientId),
-        checkInDate: new Date().toISOString(),
+        checkInDate: new Date(),
       });
 
       // Step 2: Create automatic invoice for initial medicines only
