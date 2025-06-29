@@ -10,6 +10,22 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import { Search, Plus, Package, AlertTriangle, Edit, TrendingDown, Upload, MoreHorizontal, Trash2, Eye } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { Medicine } from "@shared/schema";
@@ -23,6 +39,8 @@ export default function Inventory() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [isAddMedicineModalOpen, setIsAddMedicineModalOpen] = useState(false);
   const [isBulkImportModalOpen, setIsBulkImportModalOpen] = useState(false);
+  const [editingMedicine, setEditingMedicine] = useState<Medicine | null>(null);
+  const [deletingMedicine, setDeletingMedicine] = useState<Medicine | null>(null);
   const { toast } = useToast();
 
   const { data: medicines = [], isLoading } = useQuery<Medicine[]>({
@@ -50,6 +68,29 @@ export default function Inventory() {
       toast({
         title: "Error",
         description: "Failed to update medicine",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMedicineMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest("DELETE", `/api/medicines/${id}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/medicines"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/medicines/low-stock"] });
+      toast({
+        title: "Success",
+        description: "Medicine deleted successfully",
+      });
+      setDeletingMedicine(null);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete medicine",
         variant: "destructive",
       });
     },
@@ -315,16 +356,16 @@ export default function Inventory() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => console.log("View medicine:", medicine.id)}>
+                            <DropdownMenuItem onClick={() => setEditingMedicine(medicine)}>
                               <Eye className="mr-2 h-4 w-4" />
                               View Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => console.log("Edit medicine:", medicine.id)}>
+                            <DropdownMenuItem onClick={() => setEditingMedicine(medicine)}>
                               <Edit className="mr-2 h-4 w-4" />
                               Edit Medicine
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => console.log("Delete medicine:", medicine.id)}
+                              onClick={() => setDeletingMedicine(medicine)}
                               className="text-destructive focus:text-destructive"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
@@ -357,6 +398,75 @@ export default function Inventory() {
         isOpen={isBulkImportModalOpen}
         onClose={() => setIsBulkImportModalOpen(false)}
       />
+
+      {/* Edit Medicine Modal */}
+      <Dialog open={!!editingMedicine} onOpenChange={() => setEditingMedicine(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Medicine</DialogTitle>
+          </DialogHeader>
+          {editingMedicine && (
+            <div className="space-y-4">
+              <div>
+                <Label>Medicine Name</Label>
+                <Input defaultValue={editingMedicine.name} />
+              </div>
+              <div>
+                <Label>Category</Label>
+                <Input defaultValue={editingMedicine.category || ""} />
+              </div>
+              <div>
+                <Label>Buy Price</Label>
+                <Input defaultValue={editingMedicine.buyPrice} />
+              </div>
+              <div>
+                <Label>Unit Price</Label>
+                <Input defaultValue={editingMedicine.unitPrice} />
+              </div>
+              <div>
+                <Label>Stock Quantity</Label>
+                <Input defaultValue={editingMedicine.stockQuantity} />
+              </div>
+              <div>
+                <Label>Low Stock Threshold</Label>
+                <Input defaultValue={editingMedicine.lowStockThreshold} />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingMedicine(null)}>
+              Cancel
+            </Button>
+            <Button>Update Medicine</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={!!deletingMedicine} onOpenChange={() => setDeletingMedicine(null)}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Delete Medicine</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-gray-600">
+              Are you sure you want to delete "{deletingMedicine?.name}"? This action cannot be undone.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletingMedicine(null)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => deletingMedicine && deleteMedicineMutation.mutate(deletingMedicine.id)}
+              disabled={deleteMedicineMutation.isPending}
+            >
+              {deleteMedicineMutation.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
