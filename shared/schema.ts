@@ -42,7 +42,7 @@ export const medicines = pgTable("medicines", {
   name: varchar("name", { length: 255 }).notNull(),
   category: varchar("category", { length: 100 }),
   unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
-  buyPrice: decimal("buy_price", { precision: 10, scale: 2 }).notNull(),
+  buyPrice: decimal("buy_price", { precision: 10, scale: 2 }).notNull().default("0"),
   stockQuantity: integer("stock_quantity").notNull().default(0),
   lowStockThreshold: integer("low_stock_threshold").notNull().default(50),
   unit: varchar("unit", { length: 50 }).notNull().default("units"),
@@ -230,7 +230,7 @@ export type DashboardStats = {
   outstandingChange: number;
   revenueChange: number;
   pendingAmount: number;
-  criticalItems: number;
+  totalProfit: number;
 };
 
 export type RoomOccupancy = {

@@ -1,5 +1,5 @@
 import { 
-  patients, medicines, rooms, invoices, invoiceItems, payments, activityLogs,
+  patients, medicines, rooms, invoices, invoiceItems, payments, activityLogs, patientDocuments,
   type Patient, type InsertPatient,
   type Medicine, type InsertMedicine,
   type Room, type InsertRoom,
@@ -7,6 +7,7 @@ import {
   type InvoiceItem, type InsertInvoiceItem,
   type Payment, type InsertPayment,
   type ActivityLog, type InsertActivityLog,
+  type PatientDocument, type InsertPatientDocument,
   type InvoiceWithDetails, type DashboardStats, type RoomOccupancy
 } from "@shared/schema";
 import { db } from "./db";
@@ -56,6 +57,13 @@ export interface IStorage {
   // Activity Logs
   getActivityLogs(limit?: number): Promise<ActivityLog[]>;
   logActivity(activity: InsertActivityLog): Promise<ActivityLog>;
+
+  // Patient Documents
+  getPatientDocuments(patientId: number): Promise<PatientDocument[]>;
+  getPatientDocument(id: number): Promise<PatientDocument | undefined>;
+  createPatientDocument(document: InsertPatientDocument): Promise<PatientDocument>;
+  updatePatientDocument(id: number, document: Partial<InsertPatientDocument>): Promise<PatientDocument | undefined>;
+  deletePatientDocument(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -361,6 +369,34 @@ export class DatabaseStorage implements IStorage {
   async logActivity(activity: InsertActivityLog): Promise<ActivityLog> {
     const [newActivity] = await db.insert(activityLogs).values(activity).returning();
     return newActivity;
+  }
+
+  // Patient Document methods
+  async getPatientDocuments(patientId: number): Promise<PatientDocument[]> {
+    return await db.select().from(patientDocuments).where(eq(patientDocuments.patientId, patientId));
+  }
+
+  async getPatientDocument(id: number): Promise<PatientDocument | undefined> {
+    const [document] = await db.select().from(patientDocuments).where(eq(patientDocuments.id, id));
+    return document;
+  }
+
+  async createPatientDocument(document: InsertPatientDocument): Promise<PatientDocument> {
+    const [newDocument] = await db.insert(patientDocuments).values(document).returning();
+    return newDocument;
+  }
+
+  async updatePatientDocument(id: number, document: Partial<InsertPatientDocument>): Promise<PatientDocument | undefined> {
+    const updatedData = { ...document, updatedAt: new Date() };
+    const [updatedDocument] = await db.update(patientDocuments)
+      .set(updatedData)
+      .where(eq(patientDocuments.id, id))
+      .returning();
+    return updatedDocument;
+  }
+
+  async deletePatientDocument(id: number): Promise<void> {
+    await db.delete(patientDocuments).where(eq(patientDocuments.id, id));
   }
 }
 
