@@ -448,8 +448,8 @@ export class DatabaseStorage implements IStorage {
       const now = new Date();
       const daysDiff = Math.floor((now.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
       
-      // Only process if at least 1 day has passed
-      if (daysDiff < 1) continue;
+      // For testing: process even same-day assignments (minimum 1 day charge)
+      const chargeDays = Math.max(1, daysDiff);
       
       // Find the room assignment invoice for this patient and room
       const roomInvoices = await db.select()
@@ -468,13 +468,13 @@ export class DatabaseStorage implements IStorage {
       
       // Calculate total room charges that should be on the invoice
       const dailyRate = parseFloat(room.dailyRate);
-      const totalRoomCharges = dailyRate * daysDiff;
+      const totalRoomCharges = dailyRate * chargeDays;
       
       // Update the invoice total to include accumulated room charges
       await db.update(invoices)
         .set({ 
           totalAmount: totalRoomCharges.toFixed(2),
-          description: `Room assignment: ${room.roomNumber} - ${daysDiff} day(s) @ ${formatCurrency(room.dailyRate)}/day`
+          description: `Room assignment: ${room.roomNumber} - ${chargeDays} day(s) @ ${formatCurrency(room.dailyRate)}/day`
         })
         .where(eq(invoices.id, invoice.id));
       
@@ -485,7 +485,7 @@ export class DatabaseStorage implements IStorage {
       await this.logActivity({
         type: 'room',
         title: `Room charges updated for Room ${room.roomNumber}`,
-        description: `Daily room charges processed: ${daysDiff} day(s) = ${formatCurrency(totalRoomCharges.toString())}`,
+        description: `Daily room charges processed: ${chargeDays} day(s) = ${formatCurrency(totalRoomCharges.toString())}`,
         relatedId: room.id
       });
     }
