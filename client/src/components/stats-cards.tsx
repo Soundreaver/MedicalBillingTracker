@@ -37,13 +37,13 @@ export default function StatsCards({ stats }: StatsCardsProps) {
       iconBg: "bg-soft-blue/10",
     },
     {
-      title: "Total Profit",
-      value: formatCurrency(stats.totalProfit),
-      change: `${stats.lowStockItems} items low stock`,
-      changeType: "positive" as const,
-      icon: Target,
-      iconColor: "text-success-green",
-      iconBg: "bg-success-green/10",
+      title: "Low Stock Items",
+      value: stats.lowStockItems.toString(),
+      change: "Items requiring restock",
+      changeType: stats.lowStockItems > 0 ? "negative" as const : "positive" as const,
+      icon: PillBottle,
+      iconColor: stats.lowStockItems > 0 ? "text-urgent-red" : "text-success-green",
+      iconBg: stats.lowStockItems > 0 ? "bg-urgent-red/10" : "bg-success-green/10",
     },
   ];
 

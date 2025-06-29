@@ -287,11 +287,11 @@ export default function Inventory() {
                   <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Medicine</th>
                   <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Category</th>
                   <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Buy Price</th>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
+                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Sell Price</th>
                   <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Total Buy Value</th>
                   <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Threshold</th>
                   <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Profit</th>
                   <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -332,17 +332,17 @@ export default function Inventory() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-professional-dark">
+                          {formatCurrency(parseFloat(medicine.buyPrice) * medicine.stockQuantity)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-600">{medicine.lowStockThreshold}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Badge className={getStockColor(status)}>
                           {status === "critical" ? "Critical" : status === "low" ? "Low Stock" : "In Stock"}
                         </Badge>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-success-green">
-                          {formatCurrency((parseFloat(medicine.unitPrice) - parseFloat(medicine.buyPrice)) * medicine.stockQuantity)}
-                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <DropdownMenu>

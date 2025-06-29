@@ -164,6 +164,42 @@ export default function AddMedicineModal({ isOpen, onClose }: AddMedicineModalPr
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
+                name="buyPrice"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Buy Price (BDT)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="0.00" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="unitPrice"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Sell Price (BDT)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="0.00" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
                 name="stockQuantity"
                 render={({ field }) => (
                   <FormItem>

@@ -400,9 +400,27 @@ export default function EditPatientModal({ patient, isOpen, onClose }: EditPatie
                             name="documentUrl"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Document URL (Optional)</FormLabel>
+                                <FormLabel>Upload PDF or Enter URL</FormLabel>
                                 <FormControl>
-                                  <Input {...field} placeholder="https://..." />
+                                  <div className="space-y-2">
+                                    <Input 
+                                      type="file" 
+                                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                          // In a real app, you'd upload to cloud storage
+                                          field.onChange(`file://${file.name}`);
+                                        }
+                                      }}
+                                    />
+                                    <div className="text-center text-sm text-gray-500">OR</div>
+                                    <Input 
+                                      {...field} 
+                                      placeholder="Enter document URL..." 
+                                      type="url"
+                                    />
+                                  </div>
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
