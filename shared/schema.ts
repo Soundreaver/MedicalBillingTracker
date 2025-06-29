@@ -219,6 +219,7 @@ export type InvoiceWithDetails = Invoice & {
   patient: Patient;
   items: InvoiceItem[];
   payments: Payment[];
+  paidAmount: number;
   outstandingAmount: number;
 };
 

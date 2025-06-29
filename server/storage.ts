@@ -187,6 +187,7 @@ export class DatabaseStorage implements IStorage {
           patient,
           items,
           payments: paymentsList,
+          paidAmount: totalPaid,
           outstandingAmount,
         });
       }
@@ -213,6 +214,7 @@ export class DatabaseStorage implements IStorage {
       patient,
       items,
       payments: paymentsList,
+      paidAmount: totalPaid,
       outstandingAmount,
     };
   }
