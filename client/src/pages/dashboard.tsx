@@ -79,10 +79,12 @@ export default function Dashboard() {
     },
     {
       title: "Process Daily Charges",
-      description: "Update room charges for occupied rooms",
+      description: roomOccupancy.occupied > 0 
+        ? `Update charges for ${roomOccupancy.occupied} occupied room(s)`
+        : "No occupied rooms to process",
       icon: Clock,
-      color: "bg-purple-500",
-      onClick: () => processDailyChargesMutation.mutate(),
+      color: roomOccupancy.occupied > 0 ? "bg-purple-500" : "bg-gray-400",
+      onClick: roomOccupancy.occupied > 0 ? () => processDailyChargesMutation.mutate() : undefined,
     },
   ];
 
