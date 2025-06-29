@@ -1,43 +1,12 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Plus, CreditCard, Package, BarChart3, Clock } from "lucide-react";
+import { BarChart3, Package } from "lucide-react";
 import StatsCards from "@/components/stats-cards";
 import RecentActivity from "@/components/recent-activity";
 import OutstandingInvoicesTable from "@/components/outstanding-invoices-table";
 import { DashboardStats, RoomOccupancy, Medicine } from "@shared/schema";
-import { formatCurrency } from "@/lib/utils";
-import { useState } from "react";
-import CreateInvoiceModal from "@/components/modals/create-invoice-modal";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
-  const [showCreateInvoice, setShowCreateInvoice] = useState(false);
-  const { toast } = useToast();
-
-  const processDailyChargesMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/rooms/process-daily-charges");
-      return await response.json();
-    },
-    onSuccess: (data: { processed: number; totalCharges: number }) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/activity-logs"] });
-      toast({
-        title: "Daily Charges Processed",
-        description: `Updated ${data.processed} room(s) with total charges of ${formatCurrency(data.totalCharges.toString())}`,
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to process daily room charges",
-        variant: "destructive",
-      });
-    },
-  });
 
   const { data: stats } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
@@ -55,82 +24,14 @@ export default function Dashboard() {
     return <div>Loading...</div>;
   }
 
-  const quickActions = [
-    {
-      title: "Create New Invoice",
-      description: "Generate invoice for patient services",
-      icon: Plus,
-      color: "bg-medical-teal",
-      onClick: () => setShowCreateInvoice(true),
-    },
-    {
-      title: "Record Payment",
-      description: "Add payment for existing invoice",
-      icon: CreditCard,
-      color: "bg-soft-blue",
-      onClick: () => {},
-    },
-    {
-      title: "Manage Inventory",
-      description: "Update medicine stock levels",
-      icon: Package,
-      color: "bg-success-green",
-      onClick: () => {},
-    },
-    {
-      title: "Process Daily Charges",
-      description: roomOccupancy.occupied > 0 
-        ? `Update charges for ${roomOccupancy.occupied} occupied room(s)`
-        : "No occupied rooms to process",
-      icon: Clock,
-      color: roomOccupancy.occupied > 0 ? "bg-purple-500" : "bg-gray-400",
-      onClick: roomOccupancy.occupied > 0 ? () => processDailyChargesMutation.mutate() : undefined,
-    },
-  ];
+
 
   return (
     <div className="space-y-8">
       <StatsCards stats={stats} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Quick Actions */}
-        <div className="lg:col-span-1">
-          <Card className="border border-gray-200">
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold text-professional-dark">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {quickActions.map((action, index) => {
-                const Icon = action.icon;
-                
-                return (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    className="w-full justify-between p-4 h-auto"
-                    onClick={action.onClick}
-                  >
-                    <div className="flex items-center">
-                      <div className={`w-8 h-8 ${action.color} rounded-lg flex items-center justify-center mr-3`}>
-                        <Icon className="text-white" size={16} />
-                      </div>
-                      <div className="text-left">
-                        <div className="font-medium text-professional-dark">{action.title}</div>
-                        <div className="text-sm text-gray-500">{action.description}</div>
-                      </div>
-                    </div>
-                  </Button>
-                );
-              })}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Recent Activity */}
-        <div className="lg:col-span-2">
-          <RecentActivity />
-        </div>
-      </div>
+      {/* Recent Activity */}
+      <RecentActivity />
 
       {/* Outstanding Invoices */}
       <OutstandingInvoicesTable />
