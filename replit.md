@@ -129,6 +129,10 @@ The system uses a PostgreSQL database with the following main entities:
 - June 27, 2025. Fixed room checkout cancellation bug - payment modal now properly separates cancel vs payment completion actions
 - June 27, 2025. Removed duplicate X buttons from all modals by removing manual close buttons since DialogContent provides them automatically
 - June 27, 2025. Simplified room creation by removing redundant daily rate field since room types already define pricing
+- June 29, 2025. Added buy price field to medicines with profit calculation replacing critical items card on dashboard
+- June 29, 2025. Implemented actions dropdown menu in medicine inventory with view, edit, and delete options
+- June 29, 2025. Created comprehensive patient editing modal with patient info and document management (reports, x-rays, etc.)
+- June 29, 2025. Transformed room assignment system from fixed stay duration to accumulating daily rate that updates invoices over time
 
 ## User Preferences
 

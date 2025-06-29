@@ -64,29 +64,16 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
 
   const assignPatientMutation = useMutation({
     mutationFn: async (data: AssignPatientFormData) => {
-      // Step 1: Assign patient to room
+      // Step 1: Assign patient to room with check-in date
       const roomResponse = await apiRequest("PUT", `/api/rooms/${room.id}`, {
         isOccupied: true,
         currentPatientId: parseInt(data.patientId),
+        checkInDate: new Date().toISOString(),
       });
 
-      // Step 2: Create automatic invoice for room stay and medicines
-      const stayDurationDays = data.stayDuration;
-      const roomRate = parseFloat(room.dailyRate);
-      const totalRoomCharges = roomRate * stayDurationDays;
-
-      // Create invoice items
+      // Step 2: Create automatic invoice for initial medicines only
+      // Room charges will be added daily automatically
       const invoiceItems = [];
-      
-      // Add room charges
-      invoiceItems.push({
-        itemType: "room",
-        itemId: room.id,
-        itemName: `Room ${room.roomNumber} (${room.roomType}) - ${stayDurationDays} day${stayDurationDays > 1 ? 's' : ''}`,
-        quantity: stayDurationDays,
-        unitPrice: room.dailyRate,
-        totalPrice: totalRoomCharges.toString(),
-      });
 
       // Add medicine items
       let totalMedicineCharges = 0;
@@ -106,7 +93,7 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
         }
       }
 
-      const totalAmount = totalRoomCharges + totalMedicineCharges;
+      const totalAmount = totalMedicineCharges;
       const dueDate = new Date();
       dueDate.setDate(dueDate.getDate() + 30); // Due in 30 days
 
@@ -118,7 +105,7 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
           paidAmount: "0",
           status: "pending",
           dueDate: dueDate.toISOString(),
-          description: data.notes || `Room assignment: ${room.roomNumber} for ${stayDurationDays} day${stayDurationDays > 1 ? 's' : ''}`,
+          description: data.notes || `Room assignment: ${room.roomNumber} - Daily charges will accumulate automatically`,
         },
         items: invoiceItems,
       };
@@ -165,15 +152,12 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
   };
 
   const calculateTotal = () => {
-    const stayDuration = form.watch("stayDuration") || 1;
-    const roomTotal = parseFloat(room.dailyRate) * stayDuration;
-    
     const medicineTotal = selectedMedicines.reduce((sum, item) => {
       const medicine = medicines.find(m => m.id === item.medicineId);
       return sum + (medicine ? parseFloat(medicine.unitPrice) * item.quantity : 0);
     }, 0);
     
-    return roomTotal + medicineTotal;
+    return medicineTotal; // Only medicine costs - room charges will accumulate daily
   };
 
   const onSubmit = async (data: AssignPatientFormData) => {
