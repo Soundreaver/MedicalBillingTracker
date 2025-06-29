@@ -135,6 +135,8 @@ The system uses a PostgreSQL database with the following main entities:
 - June 29, 2025. Transformed room assignment system from fixed stay duration to accumulating daily rate that updates invoices over time
 - June 29, 2025. Implemented working delete functionality for medicines with proper server-side route and database storage method
 - June 29, 2025. Replaced critical items card in medicine inventory with profit card that calculates actual profit from medicine sales in invoices
+- June 29, 2025. Fixed invoice payment display bug by adding paidAmount field to InvoiceWithDetails type and storage methods
+- June 29, 2025. Fixed room assignment validation errors by updating room schema to properly handle checkInDate timestamp transformations
 
 ## User Preferences
 
