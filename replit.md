@@ -138,6 +138,8 @@ The system uses a PostgreSQL database with the following main entities:
 - June 29, 2025. Fixed invoice payment display bug by adding paidAmount field to InvoiceWithDetails type and storage methods
 - June 29, 2025. Fixed room assignment validation errors by updating room schema to properly handle checkInDate timestamp transformations
 - June 29, 2025. Fixed invoice creation error for room assignments by handling empty invoice items array in createInvoice method
+- June 29, 2025. Restored payment modal functionality for room checkout to handle outstanding invoices properly
+- June 29, 2025. Implemented daily room charge processing system with manual trigger button on dashboard for testing
 
 ## User Preferences
 
