@@ -80,7 +80,7 @@ export default function Billing() {
   });
 
   const handleUpdateRoomCharges = (invoice: InvoiceWithDetails) => {
-    updateRoomChargesMutation.mutate(invoice.id);
+    updateRoomChargesMutation.mutate();
   };
 
   const getInvoiceStatus = (invoice: InvoiceWithDetails) => {

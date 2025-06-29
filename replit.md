@@ -142,6 +142,8 @@ The system uses a PostgreSQL database with the following main entities:
 - June 29, 2025. Implemented daily room charge processing system with manual trigger button on dashboard for testing
 - June 29, 2025. Enhanced daily charge processing with automatic updates - room charges now update automatically when viewing invoices, plus manual trigger available
 - June 29, 2025. Added invoice-specific room charge updates with API endpoint for targeted processing and intelligent dashboard button that shows occupied room count
+- June 29, 2025. Removed Quick Actions card from dashboard for cleaner interface and removed redundant Payments tab from navigation
+- June 29, 2025. Added invoice-specific manual room charge processing button in billing page for room assignment invoices with Clock icon and purple styling
 
 ## User Preferences
 
