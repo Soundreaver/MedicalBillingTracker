@@ -309,6 +309,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/medicines/:id", authenticate, requireDoctorOrAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteMedicine(id);
+      res.json({ message: "Medicine deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete medicine" });
+    }
+  });
+
   // Bulk medicine import endpoints
   app.post("/api/medicines/parse-excel", authenticate, requireDoctorOrAdmin, upload.single('file'), async (req, res) => {
     try {
