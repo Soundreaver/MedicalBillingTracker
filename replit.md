@@ -133,6 +133,8 @@ The system uses a PostgreSQL database with the following main entities:
 - June 29, 2025. Implemented actions dropdown menu in medicine inventory with view, edit, and delete options
 - June 29, 2025. Created comprehensive patient editing modal with patient info and document management (reports, x-rays, etc.)
 - June 29, 2025. Transformed room assignment system from fixed stay duration to accumulating daily rate that updates invoices over time
+- June 29, 2025. Implemented working delete functionality for medicines with proper server-side route and database storage method
+- June 29, 2025. Replaced critical items card in medicine inventory with profit card that calculates actual profit from medicine sales in invoices
 
 ## User Preferences
 
