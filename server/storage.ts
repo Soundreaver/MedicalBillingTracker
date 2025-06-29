@@ -11,7 +11,13 @@ import {
   type InvoiceWithDetails, type DashboardStats, type RoomOccupancy
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, sql, lt } from "drizzle-orm";
+import { eq, sql, lt, and, like } from "drizzle-orm";
+
+// Simple currency formatter for server-side use
+function formatCurrency(amount: number | string): string {
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  return `৳${numAmount.toFixed(2)}`;
+}
 
 export interface IStorage {
   // Patients
@@ -65,6 +71,9 @@ export interface IStorage {
   createPatientDocument(document: InsertPatientDocument): Promise<PatientDocument>;
   updatePatientDocument(id: number, document: Partial<InsertPatientDocument>): Promise<PatientDocument | undefined>;
   deletePatientDocument(id: number): Promise<void>;
+
+  // Daily Room Charges
+  processDailyRoomCharges(): Promise<{ processed: number; totalCharges: number }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -422,6 +431,66 @@ export class DatabaseStorage implements IStorage {
 
   async deletePatientDocument(id: number): Promise<void> {
     await db.delete(patientDocuments).where(eq(patientDocuments.id, id));
+  }
+
+  async processDailyRoomCharges(): Promise<{ processed: number; totalCharges: number }> {
+    // Get all occupied rooms
+    const occupiedRooms = await db.select().from(rooms).where(eq(rooms.isOccupied, true));
+    
+    let processedCount = 0;
+    let totalCharges = 0;
+    
+    for (const room of occupiedRooms) {
+      if (!room.currentPatientId || !room.checkInDate) continue;
+      
+      // Calculate days since check-in
+      const checkInDate = new Date(room.checkInDate);
+      const now = new Date();
+      const daysDiff = Math.floor((now.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      // Only process if at least 1 day has passed
+      if (daysDiff < 1) continue;
+      
+      // Find the room assignment invoice for this patient and room
+      const roomInvoices = await db.select()
+        .from(invoices)
+        .where(
+          and(
+            eq(invoices.patientId, room.currentPatientId),
+            like(invoices.description, `%Room assignment: ${room.roomNumber}%`)
+          )
+        );
+      
+      if (roomInvoices.length === 0) continue;
+      
+      // Use the most recent room assignment invoice
+      const invoice = roomInvoices[roomInvoices.length - 1];
+      
+      // Calculate total room charges that should be on the invoice
+      const dailyRate = parseFloat(room.dailyRate);
+      const totalRoomCharges = dailyRate * daysDiff;
+      
+      // Update the invoice total to include accumulated room charges
+      await db.update(invoices)
+        .set({ 
+          totalAmount: totalRoomCharges.toFixed(2),
+          description: `Room assignment: ${room.roomNumber} - ${daysDiff} day(s) @ ${formatCurrency(room.dailyRate)}/day`
+        })
+        .where(eq(invoices.id, invoice.id));
+      
+      processedCount++;
+      totalCharges += totalRoomCharges;
+      
+      // Log the activity
+      await this.logActivity({
+        type: 'billing',
+        title: `Room charges updated for Room ${room.roomNumber}`,
+        description: `Daily room charges processed: ${daysDiff} day(s) = ${formatCurrency(totalRoomCharges.toString())}`,
+        relatedId: room.id
+      });
+    }
+    
+    return { processed: processedCount, totalCharges };
   }
 }
 

@@ -634,6 +634,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Daily room charge updates
+  app.post("/api/rooms/process-daily-charges", authenticate, async (req, res) => {
+    try {
+      const result = await storage.processDailyRoomCharges();
+      res.json(result);
+    } catch (error) {
+      console.error("Error processing daily room charges:", error);
+      res.status(500).json({ message: "Failed to process daily room charges" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
