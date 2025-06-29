@@ -4,7 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Package, AlertTriangle, Edit, TrendingDown, Upload } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Search, Plus, Package, AlertTriangle, Edit, TrendingDown, Upload, MoreHorizontal, Trash2, Eye } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { Medicine } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -239,11 +245,12 @@ export default function Inventory() {
                 <tr>
                   <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Medicine</th>
                   <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Buy Price</th>
                   <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
                   <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Stock</th>
                   <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Threshold</th>
                   <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Value</th>
+                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Profit</th>
                   <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -260,6 +267,11 @@ export default function Inventory() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-600">{medicine.category || 'Uncategorized'}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-professional-dark">
+                          {formatCurrency(medicine.buyPrice)}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-professional-dark">
@@ -287,18 +299,39 @@ export default function Inventory() {
                         </Badge>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-professional-dark">
-                          {formatCurrency(stockValue)}
+                        <div className="text-sm font-medium text-success-green">
+                          {formatCurrency((parseFloat(medicine.unitPrice) - parseFloat(medicine.buyPrice)) * medicine.stockQuantity)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-medical-teal hover:text-soft-blue"
-                        >
-                          <Edit size={16} />
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-medical-teal hover:text-soft-blue"
+                            >
+                              <MoreHorizontal size={16} />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => console.log("View medicine:", medicine.id)}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => console.log("Edit medicine:", medicine.id)}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit Medicine
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => console.log("Delete medicine:", medicine.id)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </td>
                     </tr>
                   );
