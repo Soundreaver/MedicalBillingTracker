@@ -228,8 +228,11 @@ export class DatabaseStorage implements IStorage {
   async createInvoice(invoice: InsertInvoice, items: InsertInvoiceItem[]): Promise<InvoiceWithDetails> {
     const [newInvoice] = await db.insert(invoices).values(invoice).returning();
     
-    const invoiceItemsWithId = items.map(item => ({ ...item, invoiceId: newInvoice.id }));
-    await db.insert(invoiceItems).values(invoiceItemsWithId);
+    // Only insert invoice items if there are any
+    if (items.length > 0) {
+      const invoiceItemsWithId = items.map(item => ({ ...item, invoiceId: newInvoice.id }));
+      await db.insert(invoiceItems).values(invoiceItemsWithId);
+    }
 
     // Update medicine stock for medicine items
     for (const item of items) {
