@@ -74,6 +74,7 @@ export interface IStorage {
 
   // Daily Room Charges
   processDailyRoomCharges(): Promise<{ processed: number; totalCharges: number }>;
+  updateRoomCharges(roomId: number): Promise<{ charges: number } | null>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -443,54 +444,68 @@ export class DatabaseStorage implements IStorage {
     for (const room of occupiedRooms) {
       if (!room.currentPatientId || !room.checkInDate) continue;
       
-      // Calculate days since check-in
-      const checkInDate = new Date(room.checkInDate);
-      const now = new Date();
-      const daysDiff = Math.floor((now.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
-      
-      // For testing: process even same-day assignments (minimum 1 day charge)
-      const chargeDays = Math.max(1, daysDiff);
-      
-      // Find the room assignment invoice for this patient and room
-      const roomInvoices = await db.select()
-        .from(invoices)
-        .where(
-          and(
-            eq(invoices.patientId, room.currentPatientId),
-            like(invoices.description, `%Room assignment: ${room.roomNumber}%`)
-          )
-        );
-      
-      if (roomInvoices.length === 0) continue;
-      
-      // Use the most recent room assignment invoice
-      const invoice = roomInvoices[roomInvoices.length - 1];
-      
-      // Calculate total room charges that should be on the invoice
-      const dailyRate = parseFloat(room.dailyRate);
-      const totalRoomCharges = dailyRate * chargeDays;
-      
-      // Update the invoice total to include accumulated room charges
-      await db.update(invoices)
-        .set({ 
-          totalAmount: totalRoomCharges.toFixed(2),
-          description: `Room assignment: ${room.roomNumber} - ${chargeDays} day(s) @ ${formatCurrency(room.dailyRate)}/day`
-        })
-        .where(eq(invoices.id, invoice.id));
-      
-      processedCount++;
-      totalCharges += totalRoomCharges;
-      
-      // Log the activity
-      await this.logActivity({
-        type: 'room',
-        title: `Room charges updated for Room ${room.roomNumber}`,
-        description: `Daily room charges processed: ${chargeDays} day(s) = ${formatCurrency(totalRoomCharges.toString())}`,
-        relatedId: room.id
-      });
+      const result = await this.updateRoomCharges(room.id);
+      if (result) {
+        processedCount++;
+        totalCharges += result.charges;
+      }
     }
     
     return { processed: processedCount, totalCharges };
+  }
+
+  async updateRoomCharges(roomId: number): Promise<{ charges: number } | null> {
+    const [room] = await db.select().from(rooms).where(eq(rooms.id, roomId));
+    if (!room || !room.isOccupied || !room.currentPatientId || !room.checkInDate) return null;
+    
+    // Calculate days since check-in
+    const checkInDate = new Date(room.checkInDate);
+    const now = new Date();
+    const daysDiff = Math.floor((now.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // For testing: process even same-day assignments (minimum 1 day charge)
+    const chargeDays = Math.max(1, daysDiff);
+    
+    // Find the room assignment invoice for this patient and room
+    const roomInvoices = await db.select()
+      .from(invoices)
+      .where(
+        and(
+          eq(invoices.patientId, room.currentPatientId),
+          like(invoices.description, `%Room assignment: ${room.roomNumber}%`)
+        )
+      );
+    
+    if (roomInvoices.length === 0) return null;
+    
+    // Use the most recent room assignment invoice
+    const invoice = roomInvoices[roomInvoices.length - 1];
+    
+    // Calculate total room charges that should be on the invoice
+    const dailyRate = parseFloat(room.dailyRate);
+    const totalRoomCharges = dailyRate * chargeDays;
+    
+    // Only update if charges have changed
+    const currentTotal = parseFloat(invoice.totalAmount);
+    if (currentTotal === totalRoomCharges) return null;
+    
+    // Update the invoice total to include accumulated room charges
+    await db.update(invoices)
+      .set({ 
+        totalAmount: totalRoomCharges.toFixed(2),
+        description: `Room assignment: ${room.roomNumber} - ${chargeDays} day(s) @ ${formatCurrency(room.dailyRate)}/day`
+      })
+      .where(eq(invoices.id, invoice.id));
+    
+    // Log the activity
+    await this.logActivity({
+      type: 'room',
+      title: `Room charges updated for Room ${room.roomNumber}`,
+      description: `Daily room charges processed: ${chargeDays} day(s) = ${formatCurrency(totalRoomCharges.toString())}`,
+      relatedId: room.id
+    });
+    
+    return { charges: totalRoomCharges };
   }
 }
 

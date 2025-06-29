@@ -494,9 +494,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Invoices
+  // Invoices (with automatic room charge updates)
   app.get("/api/invoices", authenticate, async (req, res) => {
     try {
+      // Auto-update room charges before fetching invoices
+      await storage.processDailyRoomCharges();
+      
       const invoices = await storage.getInvoices();
       res.json(invoices);
     } catch (error) {
@@ -506,6 +509,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/invoices/outstanding", authenticate, async (req, res) => {
     try {
+      // Auto-update room charges before fetching outstanding invoices
+      await storage.processDailyRoomCharges();
+      
       const invoices = await storage.getOutstandingInvoices();
       res.json(invoices);
     } catch (error) {
@@ -642,6 +648,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error processing daily room charges:", error);
       res.status(500).json({ message: "Failed to process daily room charges" });
+    }
+  });
+
+  // Update specific room charges
+  app.post("/api/rooms/:id/update-charges", authenticate, async (req, res) => {
+    try {
+      const roomId = parseInt(req.params.id);
+      const result = await storage.updateRoomCharges(roomId);
+      
+      if (result) {
+        res.json({ success: true, charges: result.charges });
+      } else {
+        res.json({ success: false, message: "No charges to update" });
+      }
+    } catch (error) {
+      console.error("Error updating room charges:", error);
+      res.status(500).json({ message: "Failed to update room charges" });
     }
   });
 
