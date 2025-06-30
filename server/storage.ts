@@ -1,7 +1,8 @@
 import { 
-  patients, medicines, rooms, invoices, invoiceItems, payments, activityLogs, patientDocuments,
+  patients, medicines, medicalServices, rooms, invoices, invoiceItems, payments, activityLogs, patientDocuments,
   type Patient, type InsertPatient,
   type Medicine, type InsertMedicine,
+  type MedicalService, type InsertMedicalService,
   type Room, type InsertRoom,
   type Invoice, type InsertInvoice,
   type InvoiceItem, type InsertInvoiceItem,
@@ -34,6 +35,13 @@ export interface IStorage {
   updateMedicine(id: number, medicine: Partial<InsertMedicine>): Promise<Medicine | undefined>;
   deleteMedicine(id: number): Promise<void>;
   getLowStockMedicines(): Promise<Medicine[]>;
+
+  // Medical Services
+  getMedicalServices(): Promise<MedicalService[]>;
+  getMedicalService(id: number): Promise<MedicalService | undefined>;
+  createMedicalService(service: InsertMedicalService): Promise<MedicalService>;
+  updateMedicalService(id: number, service: Partial<InsertMedicalService>): Promise<MedicalService | undefined>;
+  deleteMedicalService(id: number): Promise<void>;
 
   // Rooms
   getRooms(): Promise<Room[]>;

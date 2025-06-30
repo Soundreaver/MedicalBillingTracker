@@ -48,6 +48,17 @@ export const medicines = pgTable("medicines", {
   unit: varchar("unit", { length: 50 }).notNull().default("units"),
 });
 
+// Medical services table for standardized billing items
+export const medicalServices = pgTable("medical_services", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  category: varchar("category", { length: 100 }).notNull(),
+  defaultPrice: decimal("default_price", { precision: 10, scale: 2 }).notNull(),
+  unit: varchar("unit", { length: 50 }).notNull().default("service"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const rooms = pgTable("rooms", {
   id: serial("id").primaryKey(),
   roomNumber: varchar("room_number", { length: 20 }).notNull().unique(),
@@ -123,6 +134,11 @@ export const insertMedicineSchema = createInsertSchema(medicines).omit({
   id: true,
 });
 
+export const insertMedicalServiceSchema = createInsertSchema(medicalServices).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertRoomSchema = createInsertSchema(rooms).omit({
   id: true,
 }).extend({
@@ -192,6 +208,9 @@ export type InsertPatient = z.infer<typeof insertPatientSchema>;
 
 export type Medicine = typeof medicines.$inferSelect;
 export type InsertMedicine = z.infer<typeof insertMedicineSchema>;
+
+export type MedicalService = typeof medicalServices.$inferSelect;
+export type InsertMedicalService = z.infer<typeof insertMedicalServiceSchema>;
 
 export type Room = typeof rooms.$inferSelect;
 export type InsertRoom = z.infer<typeof insertRoomSchema>;
