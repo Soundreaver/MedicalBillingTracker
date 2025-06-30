@@ -53,7 +53,7 @@ export const medicalServices = pgTable("medical_services", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   category: varchar("category", { length: 100 }).notNull(),
-  defaultPrice: decimal("default_price", { precision: 10, scale: 2 }).notNull(),
+  defaultPrice: decimal("default_price", { precision: 10, scale: 2 }).notNull().default("0"),
   unit: varchar("unit", { length: 50 }).notNull().default("service"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
@@ -74,6 +74,8 @@ export const invoices = pgTable("invoices", {
   id: serial("id").primaryKey(),
   invoiceNumber: varchar("invoice_number", { length: 50 }).notNull().unique(),
   patientId: integer("patient_id").notNull().references(() => patients.id),
+  subtotalAmount: decimal("subtotal_amount", { precision: 10, scale: 2 }).notNull().default("0"),
+  serviceCharge: decimal("service_charge", { precision: 10, scale: 2 }).notNull().default("0"),
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
   paidAmount: decimal("paid_amount", { precision: 10, scale: 2 }).notNull().default("0"),
   status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, paid, overdue
@@ -151,6 +153,10 @@ export const insertRoomSchema = createInsertSchema(rooms).omit({
 export const insertInvoiceSchema = createInsertSchema(invoices).omit({
   id: true,
   createdAt: true,
+}).extend({
+  subtotalAmount: z.string().min(1, "Subtotal amount is required"),
+  serviceCharge: z.string().optional(),
+  totalAmount: z.string().min(1, "Total amount is required"),
 });
 
 export const insertInvoiceItemSchema = createInsertSchema(invoiceItems).omit({
