@@ -12,7 +12,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { formatCurrency, generateInvoiceNumber } from "@/lib/utils";
-import { Patient, Medicine, Room, insertInvoiceSchema, insertInvoiceItemSchema } from "@shared/schema";
+import { Patient, Medicine, MedicalService, Room, insertInvoiceSchema, insertInvoiceItemSchema } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -36,7 +36,7 @@ type CreateInvoiceFormData = z.infer<typeof createInvoiceFormSchema>;
 
 type InvoiceItem = {
   id: string;
-  itemType: "medicine" | "room" | "service";
+  itemType: "medicine" | "room" | "medical_service";
   itemId: number | null;
   itemName: string;
   quantity: number;
@@ -58,6 +58,10 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
 
   const { data: rooms = [] } = useQuery<Room[]>({
     queryKey: ["/api/rooms"],
+  });
+
+  const { data: medicalServices = [] } = useQuery<MedicalService[]>({
+    queryKey: ["/api/medical-services"],
   });
 
   const form = useForm<CreateInvoiceFormData>({
@@ -102,7 +106,7 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
   const addItem = () => {
     const newItem: InvoiceItem = {
       id: Math.random().toString(36).substr(2, 9),
-      itemType: "service",
+      itemType: "medical_service",
       itemId: null,
       itemName: "",
       quantity: 1,
@@ -128,7 +132,7 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
           updatedItem.totalPrice = (quantity * unitPrice).toString();
         }
 
-        // Auto-populate item details when medicine or room is selected
+        // Auto-populate item details when medicine, room, or medical service is selected
         if (field === "itemId" && value) {
           if (updatedItem.itemType === "medicine") {
             const medicine = medicines.find(m => m.id === value);
@@ -143,6 +147,13 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
               updatedItem.itemName = `Room ${room.roomNumber} (${room.roomType})`;
               updatedItem.unitPrice = room.dailyRate;
               updatedItem.totalPrice = (updatedItem.quantity * parseFloat(room.dailyRate)).toString();
+            }
+          } else if (updatedItem.itemType === "medical_service") {
+            const service = medicalServices.find(s => s.id === value);
+            if (service) {
+              updatedItem.itemName = service.name;
+              updatedItem.unitPrice = service.defaultPrice;
+              updatedItem.totalPrice = (updatedItem.quantity * parseFloat(service.defaultPrice)).toString();
             }
           }
         }
@@ -381,14 +392,21 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
                           </div>
                         )}
 
-                        {item.itemType === "service" && (
+                        {item.itemType === "medical_service" && (
                           <div>
-                            <Label>Service Name</Label>
-                            <Input
-                              value={item.itemName}
-                              onChange={(e) => updateItem(item.id, "itemName", e.target.value)}
-                              placeholder="Enter service name"
-                            />
+                            <Label>Medical Service</Label>
+                            <Select value={item.itemId?.toString() || ""} onValueChange={(value) => updateItem(item.id, "itemId", parseInt(value))}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select medical service" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {medicalServices.map((service) => (
+                                  <SelectItem key={service.id} value={service.id.toString()}>
+                                    {service.name} - {formatCurrency(service.defaultPrice)} per {service.unit}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
                         )}
 
