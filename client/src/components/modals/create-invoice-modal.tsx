@@ -152,8 +152,8 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
             const service = medicalServices.find(s => s.id === value);
             if (service) {
               updatedItem.itemName = service.name;
-              updatedItem.unitPrice = service.defaultPrice;
-              updatedItem.totalPrice = (updatedItem.quantity * parseFloat(service.defaultPrice)).toString();
+              updatedItem.unitPrice = "0.00"; // User will set their own price
+              updatedItem.totalPrice = "0.00";
             }
           }
         }

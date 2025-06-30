@@ -32,6 +32,7 @@ const medicineItemSchema = z.object({
 const medicalServiceItemSchema = z.object({
   serviceId: z.number(),
   quantity: z.number().min(1, "Quantity must be at least 1"),
+  unitPrice: z.string().min(1, "Unit price is required"),
 });
 
 const assignPatientSchema = z.object({
@@ -192,14 +193,14 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
   };
 
   const addMedicalService = () => {
-    setSelectedMedicalServices([...selectedMedicalServices, { serviceId: 0, quantity: 1 }]);
+    setSelectedMedicalServices([...selectedMedicalServices, { serviceId: 0, quantity: 1, unitPrice: "0.00" }]);
   };
 
   const removeMedicalService = (index: number) => {
     setSelectedMedicalServices(selectedMedicalServices.filter((_, i) => i !== index));
   };
 
-  const updateMedicalService = (index: number, field: keyof MedicalServiceItem, value: number) => {
+  const updateMedicalService = (index: number, field: keyof MedicalServiceItem, value: number | string) => {
     const updated = [...selectedMedicalServices];
     updated[index] = { ...updated[index], [field]: value };
     setSelectedMedicalServices(updated);
@@ -457,7 +458,7 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
                                 <SelectItem key={service.id} value={service.id.toString()}>
                                   <div className="flex justify-between items-center w-full">
                                     <span>{service.name}</span>
-                                    <span className="text-sm text-gray-500 ml-2">{formatCurrency(service.defaultPrice)} per {service.unit}</span>
+                                    <span className="text-sm text-gray-500 ml-2">per {service.unit}</span>
                                   </div>
                                 </SelectItem>
                               ))}
@@ -473,11 +474,18 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
                             onChange={(e) => updateMedicalService(index, 'quantity', parseInt(e.target.value) || 1)}
                           />
                         </div>
+                        <div className="w-28">
+                          <Input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder="Price"
+                            value={item.unitPrice}
+                            onChange={(e) => updateMedicalService(index, 'unitPrice', e.target.value)}
+                          />
+                        </div>
                         <div className="w-24 text-right">
-                          {(() => {
-                            const service = medicalServices.find(s => s.id === item.serviceId);
-                            return service ? formatCurrency((parseFloat(service.defaultPrice) * item.quantity).toString()) : '৳0.00';
-                          })()}
+                          {formatCurrency((parseFloat(item.unitPrice || "0") * item.quantity).toString())}
                         </div>
                         <Button
                           type="button"
