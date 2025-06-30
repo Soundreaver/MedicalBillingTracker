@@ -162,6 +162,7 @@ The system uses a PostgreSQL database with the following main entities:
 - June 30, 2025. Verified invoice calculations working correctly: Private room (৳3,500) + admission fee (৳600) + services = accurate subtotal with 20% service charge applied properly
 - June 30, 2025. Fixed Payment Summary display in invoice modal to show correct subtotal, service charge breakdown, and total amount instead of incorrectly displaying total as subtotal
 - June 30, 2025. Fixed server-side invoice calculation override issue - server now respects client-calculated amounts instead of overriding with incorrect server calculations
+- June 30, 2025. CRITICAL FIX: Identified and resolved updateRoomCharges method overriding invoice totals with only room charges, ignoring admission fees and service charges. Now properly updates room items and recalculates full invoice totals maintaining all charges.
 
 ## User Preferences
 
