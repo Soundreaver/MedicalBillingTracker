@@ -104,14 +104,14 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
       for (const service of selectedMedicalServices) {
         const medicalService = medicalServices.find(s => s.id === service.serviceId);
         if (medicalService) {
-          const serviceTotal = parseFloat(medicalService.defaultPrice) * service.quantity;
+          const serviceTotal = parseFloat(service.unitPrice || "0") * service.quantity;
           totalCharges += serviceTotal;
           invoiceItems.push({
             itemType: "medical_service",
             itemId: medicalService.id,
             itemName: medicalService.name,
             quantity: service.quantity,
-            unitPrice: medicalService.defaultPrice,
+            unitPrice: service.unitPrice,
             totalPrice: serviceTotal.toString(),
           });
         }
@@ -218,8 +218,7 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
     
     // Add medical service costs
     const serviceTotal = selectedMedicalServices.reduce((sum, item) => {
-      const service = medicalServices.find(s => s.id === item.serviceId);
-      return sum + (service ? parseFloat(service.defaultPrice) * item.quantity : 0);
+      return sum + (parseFloat(item.unitPrice || "0") * item.quantity);
     }, 0);
     
     return subtotal + medicineTotal + serviceTotal;
@@ -524,8 +523,7 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
                       <div className="flex justify-between">
                         <span>Medical service charges:</span>
                         <span>{formatCurrency(selectedMedicalServices.reduce((sum, item) => {
-                          const service = medicalServices.find(s => s.id === item.serviceId);
-                          return sum + (service ? parseFloat(service.defaultPrice) * item.quantity : 0);
+                          return sum + (parseFloat(item.unitPrice || "0") * item.quantity);
                         }, 0).toString())}</span>
                       </div>
                     )}

@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Plus, X, Save, Package, Bed, Wrench } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { Medicine, Room, InvoiceWithDetails } from "@shared/schema";
+import { Medicine, Room, MedicalService, InvoiceWithDetails } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -22,7 +22,7 @@ interface EditInvoiceModalProps {
 
 type InvoiceItem = {
   id: string;
-  itemType: "medicine" | "room" | "service";
+  itemType: "medicine" | "room" | "service" | "medical_service";
   itemId: number | null;
   itemName: string;
   quantity: number;
@@ -42,6 +42,10 @@ export default function EditInvoiceModal({ invoice, isOpen, onClose }: EditInvoi
 
   const { data: rooms = [] } = useQuery<Room[]>({
     queryKey: ["/api/rooms"],
+  });
+
+  const { data: medicalServices = [] } = useQuery<MedicalService[]>({
+    queryKey: ["/api/medical-services"],
   });
 
   // Initialize items from existing invoice
@@ -96,7 +100,7 @@ export default function EditInvoiceModal({ invoice, isOpen, onClose }: EditInvoi
     }));
   };
 
-  const handleItemTypeChange = (id: string, type: "medicine" | "room" | "service") => {
+  const handleItemTypeChange = (id: string, type: "medicine" | "room" | "service" | "medical_service") => {
     updateItem(id, {
       itemType: type,
       itemId: null,
