@@ -157,8 +157,9 @@ The system uses a PostgreSQL database with the following main entities:
 - June 30, 2025. Updated UI text throughout to remove "per" language and clearly distinguish one-time charges from daily room rates with descriptive labels and help text
 - June 30, 2025. Fixed duplicate close buttons in invoice view and edit invoice modals by removing manual X buttons since DialogContent provides them automatically
 - June 30, 2025. Enhanced room assignment modal to filter out patients already assigned to rooms with proper availability checking and helpful messaging when no patients are available
-- June 30, 2025. Fixed room assignment invoice calculation by adding initial room charge (1 day) as invoice item - now correctly includes admission fee + room daily rate + services + medicines
+- June 30, 2025. COMPLETED: Fixed room assignment invoice calculation by adding initial room charge (1 day) as invoice item - now correctly includes admission fee + room daily rate + services + medicines
 - June 30, 2025. Updated cost summary in room assignment to clearly show initial room charge and clarify that additional charges accumulate daily
+- June 30, 2025. Verified invoice calculations working correctly: Private room (৳3,500) + admission fee (৳600) + services = accurate subtotal with 20% service charge applied properly
 
 ## User Preferences
 
