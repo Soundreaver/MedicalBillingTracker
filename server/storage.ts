@@ -268,14 +268,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createInvoice(invoice: InsertInvoice, items: InsertInvoiceItem[]): Promise<InvoiceWithDetails> {
-    // Calculate subtotal from items
-    const subtotal = items.reduce((sum, item) => sum + parseFloat(item.totalPrice), 0);
+    // If amounts are provided by client, use them; otherwise calculate from items
+    let subtotal, serviceCharge, totalAmount;
     
-    // Calculate 20% service charge
-    const serviceCharge = subtotal * 0.20;
-    
-    // Calculate total amount (subtotal + service charge)
-    const totalAmount = subtotal + serviceCharge;
+    if (invoice.subtotalAmount && invoice.serviceCharge && invoice.totalAmount) {
+      // Use client-provided calculations
+      subtotal = parseFloat(invoice.subtotalAmount);
+      serviceCharge = parseFloat(invoice.serviceCharge);
+      totalAmount = parseFloat(invoice.totalAmount);
+    } else {
+      // Calculate from items if not provided
+      subtotal = items.reduce((sum, item) => sum + parseFloat(item.totalPrice), 0);
+      serviceCharge = subtotal * 0.20;
+      totalAmount = subtotal + serviceCharge;
+    }
     
     // Update invoice with calculated amounts
     const invoiceWithCalculations = {
