@@ -167,6 +167,7 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
       onClose();
       form.reset();
       setSelectedMedicines([]);
+      setSelectedMedicalServices([]);
     },
     onError: () => {
       toast({
@@ -191,19 +192,47 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
     setSelectedMedicines(updated);
   };
 
+  const addMedicalService = () => {
+    setSelectedMedicalServices([...selectedMedicalServices, { serviceId: 0, quantity: 1 }]);
+  };
+
+  const removeMedicalService = (index: number) => {
+    setSelectedMedicalServices(selectedMedicalServices.filter((_, i) => i !== index));
+  };
+
+  const updateMedicalService = (index: number, field: keyof MedicalServiceItem, value: number) => {
+    const updated = [...selectedMedicalServices];
+    updated[index] = { ...updated[index], [field]: value };
+    setSelectedMedicalServices(updated);
+  };
+
   const calculateTotal = () => {
+    // Fixed admission fee
+    let total = 600;
+    
+    // Add medicine costs
     const medicineTotal = selectedMedicines.reduce((sum, item) => {
       const medicine = medicines.find(m => m.id === item.medicineId);
       return sum + (medicine ? parseFloat(medicine.unitPrice) * item.quantity : 0);
     }, 0);
     
-    return medicineTotal; // Only medicine costs - room charges will accumulate daily
+    // Add medical service costs
+    const serviceTotal = selectedMedicalServices.reduce((sum, item) => {
+      const service = medicalServices.find(s => s.id === item.serviceId);
+      return sum + (service ? parseFloat(service.defaultPrice) * item.quantity : 0);
+    }, 0);
+    
+    return total + medicineTotal + serviceTotal;
   };
 
   const onSubmit = async (data: AssignPatientFormData) => {
     setIsSubmitting(true);
     try {
-      await assignPatientMutation.mutateAsync({ ...data, medicines: selectedMedicines });
+      await assignPatientMutation.mutateAsync({ 
+        ...data, 
+        medicines: selectedMedicines,
+        medicalServices: selectedMedicalServices 
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -388,6 +417,76 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
                 )}
               </div>
 
+              {/* Medical Services Selection */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-professional-dark">Medical Services (Optional)</h4>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addMedicalService}
+                    className="border-medical-teal text-medical-teal hover:bg-medical-teal hover:text-white"
+                  >
+                    <Plus className="mr-1" size={14} />
+                    Add Service
+                  </Button>
+                </div>
+
+                {selectedMedicalServices.length > 0 && (
+                  <div className="space-y-3">
+                    {selectedMedicalServices.map((item, index) => (
+                      <div key={index} className="flex items-center space-x-3 p-3 border rounded-lg">
+                        <div className="flex-1">
+                          <Select 
+                            value={item.serviceId.toString()} 
+                            onValueChange={(value) => updateMedicalService(index, 'serviceId', parseInt(value))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select medical service" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {medicalServices.map((service) => (
+                                <SelectItem key={service.id} value={service.id.toString()}>
+                                  <div className="flex justify-between items-center w-full">
+                                    <span>{service.name}</span>
+                                    <span className="text-sm text-gray-500 ml-2">{formatCurrency(service.defaultPrice)} per {service.unit}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="w-24">
+                          <Input
+                            type="number"
+                            min="1"
+                            placeholder="Qty"
+                            value={item.quantity}
+                            onChange={(e) => updateMedicalService(index, 'quantity', parseInt(e.target.value) || 1)}
+                          />
+                        </div>
+                        <div className="w-24 text-right">
+                          {(() => {
+                            const service = medicalServices.find(s => s.id === item.serviceId);
+                            return service ? formatCurrency((parseFloat(service.defaultPrice) * item.quantity).toString()) : '৳0.00';
+                          })()}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeMedicalService(index)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 size={14} />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Cost Summary */}
               <Card className="bg-gray-50">
                 <CardHeader className="pb-3">
@@ -402,6 +501,19 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
                     <div className="text-sm text-gray-500 italic">
                       Room charges will accumulate daily and be added to the invoice automatically
                     </div>
+                    <div className="flex justify-between">
+                      <span>Admission & Registration Fee:</span>
+                      <span>{formatCurrency("600.00")}</span>
+                    </div>
+                    {selectedMedicalServices.length > 0 && (
+                      <div className="flex justify-between">
+                        <span>Medical service charges:</span>
+                        <span>{formatCurrency(selectedMedicalServices.reduce((sum, item) => {
+                          const service = medicalServices.find(s => s.id === item.serviceId);
+                          return sum + (service ? parseFloat(service.defaultPrice) * item.quantity : 0);
+                        }, 0).toString())}</span>
+                      </div>
+                    )}
                     {selectedMedicines.length > 0 && (
                       <div className="flex justify-between">
                         <span>Medicine charges:</span>

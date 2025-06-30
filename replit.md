@@ -144,6 +144,9 @@ The system uses a PostgreSQL database with the following main entities:
 - June 29, 2025. Added invoice-specific room charge updates with API endpoint for targeted processing and intelligent dashboard button that shows occupied room count
 - June 29, 2025. Removed Quick Actions card from dashboard for cleaner interface and removed redundant Payments tab from navigation
 - June 29, 2025. Added invoice-specific manual room charge processing button in billing page for room assignment invoices with Clock icon and purple styling
+- June 30, 2025. Implemented comprehensive medical services system from sample invoice with 27 standardized hospital services including admission fee (600 BDT fixed)
+- June 30, 2025. Added medical services to invoice creation and room assignment workflows with automatic admission fee inclusion and service selection interface
+- June 30, 2025. Created medical services database table and API endpoints with seeded data from Mirror Hospital sample invoice covering all standard medical procedures
 
 ## User Preferences
 
