@@ -134,6 +134,16 @@ export default function EditInvoiceModal({ invoice, isOpen, onClose }: EditInvoi
           totalPrice: (item.quantity * parseFloat(room.dailyRate)).toString(),
         });
       }
+    } else if (item.itemType === "medical_service") {
+      const service = medicalServices.find(s => s.id.toString() === selectedId);
+      if (service) {
+        updateItem(id, {
+          itemId: service.id,
+          itemName: service.name,
+          unitPrice: "0.00", // User will set their own price
+          totalPrice: "0.00",
+        });
+      }
     }
   };
 
@@ -193,6 +203,7 @@ export default function EditInvoiceModal({ invoice, isOpen, onClose }: EditInvoi
     switch (type) {
       case "medicine": return <Package className="h-4 w-4" />;
       case "room": return <Bed className="h-4 w-4" />;
+      case "medical_service": return <Wrench className="h-4 w-4" />;
       case "service": return <Wrench className="h-4 w-4" />;
       default: return <Package className="h-4 w-4" />;
     }
@@ -261,7 +272,7 @@ export default function EditInvoiceModal({ invoice, isOpen, onClose }: EditInvoi
                         <div>
                           <Select
                             value={item.itemType}
-                            onValueChange={(value) => handleItemTypeChange(item.id, value as "medicine" | "room" | "service")}
+                            onValueChange={(value) => handleItemTypeChange(item.id, value as "medicine" | "room" | "service" | "medical_service")}
                           >
                             <SelectTrigger>
                               <SelectValue />
@@ -279,10 +290,16 @@ export default function EditInvoiceModal({ invoice, isOpen, onClose }: EditInvoi
                                   Room
                                 </div>
                               </SelectItem>
+                              <SelectItem value="medical_service">
+                                <div className="flex items-center">
+                                  <Wrench className="mr-2" size={14} />
+                                  Medical Service
+                                </div>
+                              </SelectItem>
                               <SelectItem value="service">
                                 <div className="flex items-center">
                                   <Wrench className="mr-2" size={14} />
-                                  Service
+                                  Custom Service
                                 </div>
                               </SelectItem>
                             </SelectContent>
@@ -326,6 +343,22 @@ export default function EditInvoiceModal({ invoice, isOpen, onClose }: EditInvoi
                                 ))}
                               </SelectContent>
                             </Select>
+                          ) : item.itemType === "medical_service" ? (
+                            <Select
+                              value={item.itemId?.toString() || ""}
+                              onValueChange={(value) => handleItemSelection(item.id, value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select medical service" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {medicalServices.map((service) => (
+                                  <SelectItem key={service.id} value={service.id.toString()}>
+                                    {service.name} - per {service.unit}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           ) : (
                             <Input
                               placeholder="Service name"
@@ -354,7 +387,7 @@ export default function EditInvoiceModal({ invoice, isOpen, onClose }: EditInvoi
                             placeholder="Price"
                             value={item.unitPrice}
                             onChange={(e) => updateItem(item.id, { unitPrice: e.target.value })}
-                            disabled={item.itemType !== "service"}
+                            disabled={item.itemType !== "service" && item.itemType !== "medical_service"}
                           />
                         </div>
 
