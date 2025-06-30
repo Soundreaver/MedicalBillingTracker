@@ -187,12 +187,10 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
       totalPrice: item.totalPrice, // Keep as string for decimal
     }));
 
-    const total = calculateTotal();
-    
     console.log("Submitting invoice:", {
       invoice: {
         ...data.invoice,
-        totalAmount: total.toString(), // Convert to string for decimal
+        // Remove totalAmount - it will be calculated on server with service charge
         paidAmount: data.invoice.paidAmount || "0", // Keep as string for decimal
         dueDate: data.invoice.dueDate.toISOString(), // Send as ISO string
       },
@@ -202,7 +200,7 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
     await createInvoiceMutation.mutateAsync({
       invoice: {
         ...data.invoice,
-        totalAmount: total.toString(), // Convert to string for decimal
+        // Remove totalAmount - it will be calculated on server with service charge
         paidAmount: data.invoice.paidAmount || "0", // Keep as string for decimal
         dueDate: data.invoice.dueDate.toISOString(), // Send as ISO string
       },

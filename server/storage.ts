@@ -268,7 +268,24 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createInvoice(invoice: InsertInvoice, items: InsertInvoiceItem[]): Promise<InvoiceWithDetails> {
-    const [newInvoice] = await db.insert(invoices).values(invoice).returning();
+    // Calculate subtotal from items
+    const subtotal = items.reduce((sum, item) => sum + parseFloat(item.totalPrice), 0);
+    
+    // Calculate 20% service charge
+    const serviceCharge = subtotal * 0.20;
+    
+    // Calculate total amount (subtotal + service charge)
+    const totalAmount = subtotal + serviceCharge;
+    
+    // Update invoice with calculated amounts
+    const invoiceWithCalculations = {
+      ...invoice,
+      subtotalAmount: subtotal.toFixed(2),
+      serviceCharge: serviceCharge.toFixed(2),
+      totalAmount: totalAmount.toFixed(2),
+    };
+    
+    const [newInvoice] = await db.insert(invoices).values(invoiceWithCalculations).returning();
     
     // Only insert invoice items if there are any
     if (items.length > 0) {
@@ -300,16 +317,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateInvoiceWithItems(id: number, data: { totalAmount?: string; description?: string; items?: InsertInvoiceItem[] }): Promise<InvoiceWithDetails | undefined> {
-    // Update the invoice basic info
-    const updates: Partial<InsertInvoice> = {};
-    if (data.totalAmount) updates.totalAmount = data.totalAmount;
-    if (data.description !== undefined) updates.description = data.description;
-    
-    if (Object.keys(updates).length > 0) {
-      await db.update(invoices).set(updates).where(eq(invoices.id, id));
-    }
-
-    // If items are provided, replace all existing items
+    // If items are provided, replace all existing items and recalculate amounts
     if (data.items) {
       // First, get original items to restore medicine stock
       const originalItems = await db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, id));
@@ -334,6 +342,19 @@ export class DatabaseStorage implements IStorage {
       const invoiceItemsWithId = data.items.map(item => ({ ...item, invoiceId: id }));
       await db.insert(invoiceItems).values(invoiceItemsWithId);
 
+      // Calculate new amounts based on items
+      const subtotal = data.items.reduce((sum, item) => sum + parseFloat(item.totalPrice), 0);
+      const serviceCharge = subtotal * 0.20;
+      const totalAmount = subtotal + serviceCharge;
+      
+      // Update invoice with calculated amounts
+      await db.update(invoices).set({
+        subtotalAmount: subtotal.toFixed(2),
+        serviceCharge: serviceCharge.toFixed(2),
+        totalAmount: totalAmount.toFixed(2),
+        description: data.description,
+      }).where(eq(invoices.id, id));
+
       // Update medicine stock for new items
       for (const item of data.items) {
         if (item.itemType === 'medicine' && item.itemId) {
@@ -345,6 +366,15 @@ export class DatabaseStorage implements IStorage {
               .where(eq(medicines.id, item.itemId));
           }
         }
+      }
+    } else {
+      // Update only basic info without touching items
+      const updates: Partial<InsertInvoice> = {};
+      if (data.totalAmount) updates.totalAmount = data.totalAmount;
+      if (data.description !== undefined) updates.description = data.description;
+      
+      if (Object.keys(updates).length > 0) {
+        await db.update(invoices).set(updates).where(eq(invoices.id, id));
       }
     }
 

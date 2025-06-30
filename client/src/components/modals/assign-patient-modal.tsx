@@ -133,7 +133,6 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
         }
       }
 
-      const totalAmount = totalCharges;
       const dueDate = new Date();
       dueDate.setDate(dueDate.getDate() + 30); // Due in 30 days
 
@@ -141,7 +140,7 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
         invoice: {
           invoiceNumber: generateInvoiceNumber(),
           patientId: parseInt(data.patientId),
-          totalAmount: totalAmount.toString(),
+          // Remove totalAmount - it will be calculated on server with service charge
           paidAmount: "0",
           status: "pending",
           dueDate: dueDate.toISOString(),
