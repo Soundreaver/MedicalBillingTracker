@@ -151,6 +151,8 @@ The system uses a PostgreSQL database with the following main entities:
 - June 30, 2025. Updated invoice schema with subtotal, service charge, and total amount fields plus automatic calculation in create/update operations
 - June 30, 2025. Enhanced invoice creation and room assignment modals to display subtotal, 20% service charge, and final total with clear breakdown
 - June 30, 2025. Removed price specifications from medical services to allow users/admins to set their own pricing as requested
+- June 30, 2025. Completed full pricing flexibility implementation - medical services in room assignment modal and create invoice modal now use user-defined pricing (defaultPrice set to 0.00)
+- June 30, 2025. Enhanced edit invoice modal with complete medical services support including user-defined pricing, proper item type selection, and editable price fields for all medical services
 
 ## User Preferences
 

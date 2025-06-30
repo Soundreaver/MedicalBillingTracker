@@ -256,9 +256,9 @@ export class DatabaseStorage implements IStorage {
       patient,
       items,
       payments: paymentsList,
-      paidAmount: totalPaid,
-      outstandingAmount,
-    };
+      paidAmount: totalPaid as number,
+      outstandingAmount: outstandingAmount as number,
+    } as InvoiceWithDetails;
   }
 
   async getInvoiceByNumber(invoiceNumber: string): Promise<InvoiceWithDetails | undefined> {
