@@ -137,6 +137,14 @@ export default function InvoiceModal({ invoice, isOpen, onClose, onRecordPayment
               <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal:</span>
+                  <span className="font-medium">{formatCurrency(invoice.subtotalAmount)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Service Charge (20%):</span>
+                  <span className="font-medium">{formatCurrency(invoice.serviceCharge)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total Amount:</span>
                   <span className="font-medium">{formatCurrency(invoice.totalAmount)}</span>
                 </div>
                 <div className="flex justify-between">

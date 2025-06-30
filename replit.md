@@ -160,6 +160,7 @@ The system uses a PostgreSQL database with the following main entities:
 - June 30, 2025. COMPLETED: Fixed room assignment invoice calculation by adding initial room charge (1 day) as invoice item - now correctly includes admission fee + room daily rate + services + medicines
 - June 30, 2025. Updated cost summary in room assignment to clearly show initial room charge and clarify that additional charges accumulate daily
 - June 30, 2025. Verified invoice calculations working correctly: Private room (৳3,500) + admission fee (৳600) + services = accurate subtotal with 20% service charge applied properly
+- June 30, 2025. Fixed Payment Summary display in invoice modal to show correct subtotal, service charge breakdown, and total amount instead of incorrectly displaying total as subtotal
 
 ## User Preferences
 
