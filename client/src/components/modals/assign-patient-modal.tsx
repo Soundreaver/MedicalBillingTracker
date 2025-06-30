@@ -142,11 +142,18 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
       const dueDate = new Date();
       dueDate.setDate(dueDate.getDate() + 30); // Due in 30 days
 
+      // Calculate subtotal, service charge, and total
+      const subtotal = totalCharges;
+      const serviceCharge = subtotal * 0.20; // 20% service charge
+      const total = subtotal + serviceCharge;
+
       const invoiceData = {
         invoice: {
           invoiceNumber: generateInvoiceNumber(),
           patientId: parseInt(data.patientId),
-          // Remove totalAmount - it will be calculated on server with service charge
+          subtotalAmount: subtotal.toString(),
+          serviceCharge: serviceCharge.toString(),
+          totalAmount: total.toString(),
           paidAmount: "0",
           status: "pending",
           dueDate: dueDate.toISOString(),
