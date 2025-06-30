@@ -153,6 +153,8 @@ The system uses a PostgreSQL database with the following main entities:
 - June 30, 2025. Removed price specifications from medical services to allow users/admins to set their own pricing as requested
 - June 30, 2025. Completed full pricing flexibility implementation - medical services in room assignment modal and create invoice modal now use user-defined pricing (defaultPrice set to 0.00)
 - June 30, 2025. Enhanced edit invoice modal with complete medical services support including user-defined pricing, proper item type selection, and editable price fields for all medical services
+- June 30, 2025. Clarified charge types across all modals - room charges are daily accumulating rates, while medical services and medicines are one-time charges during admission/room assignment
+- June 30, 2025. Updated UI text throughout to remove "per" language and clearly distinguish one-time charges from daily room rates with descriptive labels and help text
 
 ## User Preferences
 
