@@ -553,14 +553,45 @@ export class DatabaseStorage implements IStorage {
     const dailyRate = parseFloat(room.dailyRate);
     const totalRoomCharges = dailyRate * chargeDays;
     
-    // Only update if charges have changed
-    const currentTotal = parseFloat(invoice.totalAmount);
-    if (currentTotal === totalRoomCharges) return null;
+    // Get current room item from invoice
+    const roomItems = await db.select().from(invoiceItems)
+      .where(
+        and(
+          eq(invoiceItems.invoiceId, invoice.id),
+          eq(invoiceItems.itemType, 'room')
+        )
+      );
     
-    // Update the invoice total to include accumulated room charges
+    if (roomItems.length === 0) return null; // No room item found
+    
+    const currentRoomItem = roomItems[0];
+    const currentRoomCharges = parseFloat(currentRoomItem.totalPrice);
+    
+    // Only update if room charges have changed
+    if (currentRoomCharges === totalRoomCharges) return null;
+    
+    // Update room item with new charges
+    await db.update(invoiceItems)
+      .set({
+        quantity: chargeDays,
+        totalPrice: totalRoomCharges.toFixed(2)
+      })
+      .where(eq(invoiceItems.id, currentRoomItem.id));
+    
+    // Recalculate invoice totals based on all items
+    const allItems = await db.select().from(invoiceItems)
+      .where(eq(invoiceItems.invoiceId, invoice.id));
+    
+    const newSubtotal = allItems.reduce((sum, item) => sum + parseFloat(item.totalPrice), 0);
+    const newServiceCharge = newSubtotal * 0.20;
+    const newTotal = newSubtotal + newServiceCharge;
+    
+    // Update invoice with recalculated amounts
     await db.update(invoices)
       .set({ 
-        totalAmount: totalRoomCharges.toFixed(2),
+        subtotalAmount: newSubtotal.toFixed(2),
+        serviceCharge: newServiceCharge.toFixed(2),
+        totalAmount: newTotal.toFixed(2),
         description: `Room assignment: ${room.roomNumber} - ${chargeDays} day(s) @ ${formatCurrency(room.dailyRate)}/day`
       })
       .where(eq(invoices.id, invoice.id));
@@ -569,11 +600,11 @@ export class DatabaseStorage implements IStorage {
     await this.logActivity({
       type: 'room',
       title: `Room charges updated for Room ${room.roomNumber}`,
-      description: `Daily room charges processed: ${chargeDays} day(s) = ${formatCurrency(totalRoomCharges.toString())}`,
+      description: `Daily room charges processed: ${chargeDays} day(s) = ${formatCurrency(totalRoomCharges.toString())}. Invoice total updated to ${formatCurrency(newTotal.toString())}`,
       relatedId: room.id
     });
     
-    return { charges: totalRoomCharges };
+    return { charges: newTotal };
   }
 }
 
