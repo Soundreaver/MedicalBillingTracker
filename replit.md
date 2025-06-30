@@ -155,6 +155,8 @@ The system uses a PostgreSQL database with the following main entities:
 - June 30, 2025. Enhanced edit invoice modal with complete medical services support including user-defined pricing, proper item type selection, and editable price fields for all medical services
 - June 30, 2025. Clarified charge types across all modals - room charges are daily accumulating rates, while medical services and medicines are one-time charges during admission/room assignment
 - June 30, 2025. Updated UI text throughout to remove "per" language and clearly distinguish one-time charges from daily room rates with descriptive labels and help text
+- June 30, 2025. Fixed duplicate close buttons in invoice view and edit invoice modals by removing manual X buttons since DialogContent provides them automatically
+- June 30, 2025. Enhanced room assignment modal to filter out patients already assigned to rooms with proper availability checking and helpful messaging when no patients are available
 
 ## User Preferences
 

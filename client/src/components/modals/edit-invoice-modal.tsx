@@ -227,9 +227,6 @@ export default function EditInvoiceModal({ invoice, isOpen, onClose }: EditInvoi
                 </Badge>
               </p>
             </div>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X size={16} />
-            </Button>
           </div>
         </DialogHeader>
 

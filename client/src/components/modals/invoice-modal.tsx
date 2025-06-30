@@ -39,14 +39,9 @@ export default function InvoiceModal({ invoice, isOpen, onClose, onRecordPayment
               </DialogTitle>
               <p className="text-gray-600 mt-1">{invoice.invoiceNumber}</p>
             </div>
-            <div className="flex items-center space-x-2">
-              <Badge className={getStatusColor(status)}>
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </Badge>
-              <Button variant="ghost" size="icon" onClick={onClose}>
-                <X size={16} />
-              </Button>
-            </div>
+            <Badge className={getStatusColor(status)}>
+              {status.charAt(0).toUpperCase() + status.slice(1)}
+            </Badge>
           </div>
         </DialogHeader>
 

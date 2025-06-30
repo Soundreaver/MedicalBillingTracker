@@ -60,10 +60,15 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
     queryKey: ["/api/medical-services"],
   });
 
+  const { data: rooms = [] } = useQuery<Room[]>({
+    queryKey: ["/api/rooms"],
+  });
+
   // Filter out patients who are already assigned to other rooms
   const availablePatients = patients.filter(patient => {
-    // You could add logic here to check if patient is already assigned to another room
-    return true; // For now, show all patients
+    // Check if this patient is already assigned to any room
+    const isAssigned = rooms.some(r => r.isOccupied && r.currentPatientId === patient.id);
+    return !isAssigned;
   });
 
   const form = useForm<AssignPatientFormData>({
@@ -306,16 +311,22 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {availablePatients.map((patient) => (
-                          <SelectItem key={patient.id} value={patient.id.toString()}>
-                            <div className="flex items-center">
-                              <div>
-                                <div className="font-medium">{patient.name}</div>
-                                <div className="text-sm text-gray-500">ID: {patient.patientId}</div>
+                        {availablePatients.length === 0 ? (
+                          <div className="px-3 py-2 text-sm text-gray-500">
+                            No patients available (all patients are already assigned to rooms)
+                          </div>
+                        ) : (
+                          availablePatients.map((patient) => (
+                            <SelectItem key={patient.id} value={patient.id.toString()}>
+                              <div className="flex items-center">
+                                <div>
+                                  <div className="font-medium">{patient.name}</div>
+                                  <div className="text-sm text-gray-500">ID: {patient.patientId}</div>
+                                </div>
                               </div>
-                            </div>
-                          </SelectItem>
-                        ))}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -590,11 +601,11 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
           <Button 
             type="submit"
             form="assign-patient-form"
-            disabled={isSubmitting || assignPatientMutation.isPending || !selectedPatient}
+            disabled={isSubmitting || assignPatientMutation.isPending || !selectedPatient || availablePatients.length === 0}
             className="bg-medical-teal hover:bg-medical-teal/90"
           >
             <UserCheck className="mr-2" size={16} />
-            {isSubmitting ? "Assigning..." : "Assign Patient"}
+            {availablePatients.length === 0 ? "No Patients Available" : (isSubmitting ? "Assigning..." : "Assign Patient")}
           </Button>
         </div>
       </DialogContent>
