@@ -205,9 +205,9 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
     setSelectedMedicalServices(updated);
   };
 
-  const calculateTotal = () => {
+  const calculateSubtotal = () => {
     // Fixed admission fee
-    let total = 600;
+    let subtotal = 600;
     
     // Add medicine costs
     const medicineTotal = selectedMedicines.reduce((sum, item) => {
@@ -221,7 +221,15 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
       return sum + (service ? parseFloat(service.defaultPrice) * item.quantity : 0);
     }, 0);
     
-    return total + medicineTotal + serviceTotal;
+    return subtotal + medicineTotal + serviceTotal;
+  };
+
+  const calculateServiceCharge = () => {
+    return calculateSubtotal() * 0.20; // 20% service charge
+  };
+
+  const calculateTotal = () => {
+    return calculateSubtotal() + calculateServiceCharge();
   };
 
   const onSubmit = async (data: AssignPatientFormData) => {
@@ -522,9 +530,19 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
                         }, 0).toString())}</span>
                       </div>
                     )}
-                    <div className="border-t pt-2 flex justify-between font-semibold text-lg">
-                      <span>Initial Amount:</span>
-                      <span className="text-medical-teal">{formatCurrency(calculateTotal().toString())}</span>
+                    <div className="border-t pt-2 space-y-1">
+                      <div className="flex justify-between">
+                        <span>Subtotal:</span>
+                        <span>{formatCurrency(calculateSubtotal().toString())}</span>
+                      </div>
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>Service Charge (20%):</span>
+                        <span>{formatCurrency(calculateServiceCharge().toString())}</span>
+                      </div>
+                      <div className="border-t pt-1 flex justify-between font-semibold text-lg">
+                        <span>Total Amount:</span>
+                        <span className="text-medical-teal">{formatCurrency(calculateTotal().toString())}</span>
+                      </div>
                     </div>
                   </div>
                 </CardContent>

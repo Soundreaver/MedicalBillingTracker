@@ -147,6 +147,10 @@ The system uses a PostgreSQL database with the following main entities:
 - June 30, 2025. Implemented comprehensive medical services system from sample invoice with 27 standardized hospital services including admission fee (600 BDT fixed)
 - June 30, 2025. Added medical services to invoice creation and room assignment workflows with automatic admission fee inclusion and service selection interface
 - June 30, 2025. Created medical services database table and API endpoints with seeded data from Mirror Hospital sample invoice covering all standard medical procedures
+- June 30, 2025. Implemented 20% service charge calculation on total payable amount with automatic calculation on server-side for all invoices
+- June 30, 2025. Updated invoice schema with subtotal, service charge, and total amount fields plus automatic calculation in create/update operations
+- June 30, 2025. Enhanced invoice creation and room assignment modals to display subtotal, 20% service charge, and final total with clear breakdown
+- June 30, 2025. Removed price specifications from medical services to allow users/admins to set their own pricing as requested
 
 ## User Preferences
 

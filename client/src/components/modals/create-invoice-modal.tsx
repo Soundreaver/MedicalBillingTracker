@@ -164,8 +164,16 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
     }));
   };
 
-  const calculateTotal = () => {
+  const calculateSubtotal = () => {
     return items.reduce((sum, item) => sum + parseFloat(item.totalPrice || "0"), 0);
+  };
+
+  const calculateServiceCharge = () => {
+    return calculateSubtotal() * 0.20; // 20% service charge
+  };
+
+  const calculateTotal = () => {
+    return calculateSubtotal() + calculateServiceCharge();
   };
 
   const onSubmit = async (data: CreateInvoiceFormData) => {
@@ -187,7 +195,7 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
       totalPrice: item.totalPrice, // Keep as string for decimal
     }));
 
-    console.log("Submitting invoice:", {
+    const invoicePayload = {
       invoice: {
         ...data.invoice,
         // Remove totalAmount - it will be calculated on server with service charge
@@ -195,17 +203,11 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
         dueDate: data.invoice.dueDate.toISOString(), // Send as ISO string
       },
       items: formattedItems,
-    });
+    };
+
+    console.log("Submitting invoice:", invoicePayload);
     
-    await createInvoiceMutation.mutateAsync({
-      invoice: {
-        ...data.invoice,
-        // Remove totalAmount - it will be calculated on server with service charge
-        paidAmount: data.invoice.paidAmount || "0", // Keep as string for decimal
-        dueDate: data.invoice.dueDate.toISOString(), // Send as ISO string
-      },
-      items: formattedItems,
-    });
+    await createInvoiceMutation.mutateAsync(invoicePayload);
   };
 
   const handleClose = () => {
@@ -456,11 +458,21 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
             {/* Total */}
             {items.length > 0 && (
               <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-semibold text-professional-dark">Total Amount:</span>
-                  <span className="text-2xl font-bold text-professional-dark">
-                    {formatCurrency(calculateTotal())}
-                  </span>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-professional-dark">Subtotal:</span>
+                    <span className="font-medium">{formatCurrency(calculateSubtotal())}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Service Charge (20%):</span>
+                    <span>{formatCurrency(calculateServiceCharge())}</span>
+                  </div>
+                  <div className="border-t pt-2 flex justify-between items-center">
+                    <span className="text-lg font-semibold text-professional-dark">Total Amount:</span>
+                    <span className="text-2xl font-bold text-professional-dark">
+                      {formatCurrency(calculateTotal())}
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
