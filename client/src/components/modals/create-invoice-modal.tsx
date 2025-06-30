@@ -402,7 +402,7 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
                               <SelectContent>
                                 {medicalServices.map((service) => (
                                   <SelectItem key={service.id} value={service.id.toString()}>
-                                    {service.name} - per {service.unit}
+                                    {service.name} ({service.unit})
                                   </SelectItem>
                                 ))}
                               </SelectContent>

@@ -357,7 +357,10 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
               {/* Medicine Selection */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-semibold text-professional-dark">Medicines (Optional)</h4>
+                  <div>
+                    <h4 className="font-semibold text-professional-dark">Medicines (Optional)</h4>
+                    <p className="text-sm text-gray-600">One-time medicine dispensed during admission</p>
+                  </div>
                   <Button
                     type="button"
                     variant="outline"
@@ -427,7 +430,10 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
               {/* Medical Services Selection */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-semibold text-professional-dark">Medical Services (Optional)</h4>
+                  <div>
+                    <h4 className="font-semibold text-professional-dark">Medical Services (Optional)</h4>
+                    <p className="text-sm text-gray-600">One-time charges during room assignment</p>
+                  </div>
                   <Button
                     type="button"
                     variant="outline"
@@ -457,7 +463,7 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
                                 <SelectItem key={service.id} value={service.id.toString()}>
                                   <div className="flex justify-between items-center w-full">
                                     <span>{service.name}</span>
-                                    <span className="text-sm text-gray-500 ml-2">per {service.unit}</span>
+                                    <span className="text-sm text-gray-500 ml-2">({service.unit})</span>
                                   </div>
                                 </SelectItem>
                               ))}
@@ -521,7 +527,7 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
                     </div>
                     {selectedMedicalServices.length > 0 && (
                       <div className="flex justify-between">
-                        <span>Medical service charges:</span>
+                        <span>Medical services (one-time):</span>
                         <span>{formatCurrency(selectedMedicalServices.reduce((sum, item) => {
                           return sum + (parseFloat(item.unitPrice || "0") * item.quantity);
                         }, 0).toString())}</span>
@@ -529,7 +535,7 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
                     )}
                     {selectedMedicines.length > 0 && (
                       <div className="flex justify-between">
-                        <span>Medicine charges:</span>
+                        <span>Medicines (one-time):</span>
                         <span>{formatCurrency(selectedMedicines.reduce((sum, item) => {
                           const medicine = medicines.find(m => m.id === item.medicineId);
                           return sum + (medicine ? parseFloat(medicine.unitPrice) * item.quantity : 0);

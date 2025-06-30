@@ -246,7 +246,10 @@ export default function EditInvoiceModal({ invoice, isOpen, onClose }: EditInvoi
             {/* Invoice Items */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-professional-dark">Invoice Items</h3>
+                <div>
+                  <h3 className="font-semibold text-professional-dark">Invoice Items</h3>
+                  <p className="text-sm text-gray-600">Room charges are daily, other items are one-time charges</p>
+                </div>
                 <Button
                   type="button"
                   variant="outline"
@@ -354,7 +357,7 @@ export default function EditInvoiceModal({ invoice, isOpen, onClose }: EditInvoi
                               <SelectContent>
                                 {medicalServices.map((service) => (
                                   <SelectItem key={service.id} value={service.id.toString()}>
-                                    {service.name} - per {service.unit}
+                                    {service.name} ({service.unit})
                                   </SelectItem>
                                 ))}
                               </SelectContent>
