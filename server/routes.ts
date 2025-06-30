@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { authService } from "./auth";
 import { authenticate, requireAdmin, requireDoctorOrAdmin } from "./middleware";
 import { 
-  insertPatientSchema, insertMedicineSchema, insertRoomSchema, 
+  insertPatientSchema, insertMedicineSchema, insertMedicalServiceSchema, insertRoomSchema, 
   insertInvoiceSchema, insertInvoiceItemSchema, insertPaymentSchema,
   insertPatientDocumentSchema, loginSchema, updateUserSchema, changePasswordSchema
 } from "@shared/schema";
@@ -442,6 +442,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Failed to import medicines", 
         error: error instanceof Error ? error.message : 'Unknown error'
       });
+    }
+  });
+
+  // Medical Services
+  app.get("/api/medical-services", authenticate, async (req, res) => {
+    try {
+      const services = await storage.getMedicalServices();
+      res.json(services);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch medical services" });
+    }
+  });
+
+  app.post("/api/medical-services", authenticate, requireDoctorOrAdmin, async (req, res) => {
+    try {
+      const result = insertMedicalServiceSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid medical service data", errors: result.error.errors });
+      }
+      const service = await storage.createMedicalService(result.data);
+      res.status(201).json(service);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create medical service" });
+    }
+  });
+
+  app.put("/api/medical-services/:id", authenticate, requireDoctorOrAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const result = insertMedicalServiceSchema.partial().safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid medical service data", errors: result.error.errors });
+      }
+      const service = await storage.updateMedicalService(id, result.data);
+      if (!service) {
+        return res.status(404).json({ message: "Medical service not found" });
+      }
+      res.json(service);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update medical service" });
+    }
+  });
+
+  app.delete("/api/medical-services/:id", authenticate, requireDoctorOrAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteMedicalService(id);
+      res.json({ message: "Medical service deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete medical service" });
+    }
+  });
+
+  // Seed medical services with standard hospital items
+  app.post("/api/medical-services/seed", authenticate, requireAdmin, async (req, res) => {
+    try {
+      const standardServices = [
+        { name: "Admission & Registration Fee", category: "Administrative", defaultPrice: "600.00", unit: "service" },
+        { name: "Bed/Cabin Charge", category: "Accommodation", defaultPrice: "500.00", unit: "day" },
+        { name: "Consultation Fee", category: "Medical", defaultPrice: "800.00", unit: "service" },
+        { name: "Surgeon's Fee", category: "Medical", defaultPrice: "5000.00", unit: "service" },
+        { name: "Anaesthesia Charge", category: "Medical", defaultPrice: "2000.00", unit: "service" },
+        { name: "Assistant Surgeon Charge (A)", category: "Medical", defaultPrice: "1500.00", unit: "service" },
+        { name: "Assistant Surgeon Charge (B)", category: "Medical", defaultPrice: "1000.00", unit: "service" },
+        { name: "O.T. Charge", category: "Medical", defaultPrice: "3000.00", unit: "service" },
+        { name: "Investigation Charge", category: "Diagnostic", defaultPrice: "1200.00", unit: "service" },
+        { name: "Medicine", category: "Pharmacy", defaultPrice: "100.00", unit: "item" },
+        { name: "Blood Transfusion", category: "Medical", defaultPrice: "2500.00", unit: "service" },
+        { name: "Oxygen", category: "Medical", defaultPrice: "300.00", unit: "hour" },
+        { name: "Dressing Charge", category: "Medical", defaultPrice: "200.00", unit: "service" },
+        { name: "Intensive Care Charge", category: "Medical", defaultPrice: "2000.00", unit: "day" },
+        { name: "Pylestube/Catheterisation", category: "Medical", defaultPrice: "800.00", unit: "service" },
+        { name: "I.P. Charge", category: "Medical", defaultPrice: "150.00", unit: "service" },
+        { name: "I.V.", category: "Medical", defaultPrice: "400.00", unit: "service" },
+        { name: "Enema", category: "Medical", defaultPrice: "150.00", unit: "service" },
+        { name: "Telephone", category: "Miscellaneous", defaultPrice: "50.00", unit: "service" },
+        { name: "Ambulance (Transport)", category: "Transport", defaultPrice: "1000.00", unit: "service" },
+        { name: "E.C.G.", category: "Diagnostic", defaultPrice: "500.00", unit: "service" },
+        { name: "Diabetes Test", category: "Diagnostic", defaultPrice: "300.00", unit: "service" },
+        { name: "Cardiac Monitor", category: "Medical", defaultPrice: "800.00", unit: "day" },
+        { name: "Incubator", category: "Medical", defaultPrice: "1500.00", unit: "day" },
+        { name: "Phototherapy", category: "Medical", defaultPrice: "1200.00", unit: "day" },
+        { name: "Nebulizer", category: "Medical", defaultPrice: "250.00", unit: "service" },
+        { name: "Others", category: "Miscellaneous", defaultPrice: "100.00", unit: "service" }
+      ];
+
+      const createdServices = [];
+      for (const serviceData of standardServices) {
+        try {
+          const service = await storage.createMedicalService(serviceData);
+          createdServices.push(service);
+        } catch (error) {
+          console.error(`Failed to create service: ${serviceData.name}`, error);
+        }
+      }
+
+      res.json({
+        success: true,
+        created: createdServices.length,
+        total: standardServices.length,
+        services: createdServices
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to seed medical services" });
     }
   });
 

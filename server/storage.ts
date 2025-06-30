@@ -141,6 +141,30 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(medicines).where(sql`${medicines.stockQuantity} <= ${medicines.lowStockThreshold}`);
   }
 
+  // Medical Services methods
+  async getMedicalServices(): Promise<MedicalService[]> {
+    return await db.select().from(medicalServices).where(eq(medicalServices.isActive, true));
+  }
+
+  async getMedicalService(id: number): Promise<MedicalService | undefined> {
+    const [service] = await db.select().from(medicalServices).where(eq(medicalServices.id, id));
+    return service || undefined;
+  }
+
+  async createMedicalService(service: InsertMedicalService): Promise<MedicalService> {
+    const [newService] = await db.insert(medicalServices).values(service).returning();
+    return newService;
+  }
+
+  async updateMedicalService(id: number, service: Partial<InsertMedicalService>): Promise<MedicalService | undefined> {
+    const [updated] = await db.update(medicalServices).set(service).where(eq(medicalServices.id, id)).returning();
+    return updated || undefined;
+  }
+
+  async deleteMedicalService(id: number): Promise<void> {
+    await db.update(medicalServices).set({ isActive: false }).where(eq(medicalServices.id, id));
+  }
+
   // Room methods
   async getRooms(): Promise<Room[]> {
     return await db.select().from(rooms);
