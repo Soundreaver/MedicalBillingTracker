@@ -335,7 +335,7 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
                           <Label>Type</Label>
                           <Select
                             value={item.itemType}
-                            onValueChange={(value: "medicine" | "room" | "service") => 
+                            onValueChange={(value: "medicine" | "room" | "medical_service") => 
                               updateItem(item.id, "itemType", value)
                             }
                           >
@@ -345,7 +345,7 @@ export default function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceMod
                             <SelectContent>
                               <SelectItem value="medicine">Medicine</SelectItem>
                               <SelectItem value="room">Room</SelectItem>
-                              <SelectItem value="service">Service</SelectItem>
+                              <SelectItem value="medical_service">Medical Service</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>

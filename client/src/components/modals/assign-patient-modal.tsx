@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { X, UserCheck, Plus, Trash2 } from "lucide-react";
-import { Room, Patient, Medicine } from "@shared/schema";
+import { Room, Patient, Medicine, MedicalService } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, generateInvoiceNumber } from "@/lib/utils";
@@ -29,22 +29,34 @@ const medicineItemSchema = z.object({
   quantity: z.number().min(1, "Quantity must be at least 1"),
 });
 
+const medicalServiceItemSchema = z.object({
+  serviceId: z.number(),
+  quantity: z.number().min(1, "Quantity must be at least 1"),
+});
+
 const assignPatientSchema = z.object({
   patientId: z.string().min(1, "Please select a patient"),
   notes: z.string().optional(),
   medicines: z.array(medicineItemSchema).optional(),
+  medicalServices: z.array(medicalServiceItemSchema).optional(),
 });
 
 type AssignPatientFormData = z.infer<typeof assignPatientSchema>;
 type MedicineItem = z.infer<typeof medicineItemSchema>;
+type MedicalServiceItem = z.infer<typeof medicalServiceItemSchema>;
 
 export default function AssignPatientModal({ room, patients, isOpen, onClose }: AssignPatientModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedMedicines, setSelectedMedicines] = useState<MedicineItem[]>([]);
+  const [selectedMedicalServices, setSelectedMedicalServices] = useState<MedicalServiceItem[]>([]);
   const { toast } = useToast();
 
   const { data: medicines = [] } = useQuery<Medicine[]>({
     queryKey: ["/api/medicines"],
+  });
+
+  const { data: medicalServices = [] } = useQuery<MedicalService[]>({
+    queryKey: ["/api/medical-services"],
   });
 
   // Filter out patients who are already assigned to other rooms
@@ -71,17 +83,45 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
         checkInDate: new Date().toISOString(),
       });
 
-      // Step 2: Create automatic invoice for initial medicines only
+      // Step 2: Create automatic invoice for initial services and medicines
       // Room charges will be added daily automatically
       const invoiceItems = [];
 
+      // Add fixed admission & registration fee (600 BDT)
+      invoiceItems.push({
+        itemType: "medical_service",
+        itemId: 1, // Assuming the admission fee service has ID 1
+        itemName: "Admission & Registration Fee",
+        quantity: 1,
+        unitPrice: "600.00",
+        totalPrice: "600.00",
+      });
+
+      let totalCharges = 600; // Start with admission fee
+
+      // Add medical service items
+      for (const service of selectedMedicalServices) {
+        const medicalService = medicalServices.find(s => s.id === service.serviceId);
+        if (medicalService) {
+          const serviceTotal = parseFloat(medicalService.defaultPrice) * service.quantity;
+          totalCharges += serviceTotal;
+          invoiceItems.push({
+            itemType: "medical_service",
+            itemId: medicalService.id,
+            itemName: medicalService.name,
+            quantity: service.quantity,
+            unitPrice: medicalService.defaultPrice,
+            totalPrice: serviceTotal.toString(),
+          });
+        }
+      }
+
       // Add medicine items
-      let totalMedicineCharges = 0;
       for (const med of selectedMedicines) {
         const medicine = medicines.find(m => m.id === med.medicineId);
         if (medicine) {
           const medicineTotal = parseFloat(medicine.unitPrice) * med.quantity;
-          totalMedicineCharges += medicineTotal;
+          totalCharges += medicineTotal;
           invoiceItems.push({
             itemType: "medicine",
             itemId: medicine.id,
@@ -93,7 +133,7 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
         }
       }
 
-      const totalAmount = totalMedicineCharges;
+      const totalAmount = totalCharges;
       const dueDate = new Date();
       dueDate.setDate(dueDate.getDate() + 30); // Due in 30 days
 
