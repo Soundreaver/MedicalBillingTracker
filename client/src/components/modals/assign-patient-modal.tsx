@@ -103,7 +103,18 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
         totalPrice: "600.00",
       });
 
-      let totalCharges = 600; // Start with admission fee
+      // Add room charge for initial day
+      const roomDailyRate = parseFloat(room.dailyRate);
+      invoiceItems.push({
+        itemType: "room",
+        itemId: room.id,
+        itemName: `Room ${room.roomNumber} (${room.roomType})`,
+        quantity: 1,
+        unitPrice: room.dailyRate,
+        totalPrice: room.dailyRate,
+      });
+
+      let totalCharges = 600 + roomDailyRate; // Start with admission fee + room charge
 
       // Add medical service items
       for (const service of selectedMedicalServices) {
@@ -221,6 +232,10 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
   const calculateSubtotal = () => {
     // Fixed admission fee
     let subtotal = 600;
+    
+    // Add room daily rate for initial charge
+    const roomDailyRate = parseFloat(room.dailyRate);
+    subtotal += roomDailyRate;
     
     // Add medicine costs
     const medicineTotal = selectedMedicines.reduce((sum, item) => {
@@ -532,16 +547,16 @@ export default function AssignPatientModal({ room, patients, isOpen, onClose }: 
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    <div className="flex justify-between text-gray-600">
-                      <span>Room daily rate:</span>
-                      <span>{formatCurrency(room.dailyRate)} per day</span>
-                    </div>
-                    <div className="text-sm text-gray-500 italic">
-                      Room charges will accumulate daily and be added to the invoice automatically
-                    </div>
                     <div className="flex justify-between">
                       <span>Admission & Registration Fee:</span>
                       <span>{formatCurrency("600.00")}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Initial room charge (1 day):</span>
+                      <span>{formatCurrency(room.dailyRate)}</span>
+                    </div>
+                    <div className="text-sm text-gray-500 italic">
+                      Additional room charges will accumulate daily automatically
                     </div>
                     {selectedMedicalServices.length > 0 && (
                       <div className="flex justify-between">
