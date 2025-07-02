@@ -542,8 +542,10 @@ export class DatabaseStorage implements IStorage {
     const now = new Date();
     const daysDiff = Math.floor((now.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
     
+    console.log(`Check-in: ${checkInDate.toISOString()}, Now: ${now.toISOString()}, Days diff: ${daysDiff}`);
+    
     // For testing: process even same-day assignments (minimum 1 day charge)
-    const chargeDays = Math.max(1, daysDiff);
+    const chargeDays = Math.max(1, daysDiff + 1); // Add 1 to include the current day
     
     // Find the room assignment invoice for this patient and room
     // First try to find by description patterns

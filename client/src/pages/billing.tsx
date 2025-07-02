@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Eye, CreditCard, Download, Edit, Clock } from "lucide-react";
+import { Search, Plus, Eye, CreditCard, Download, Edit } from "lucide-react";
 import { formatCurrency, formatDate, getInitials, getDaysOverdue, getStatusColor } from "@/lib/utils";
 import { generateInvoicePDF } from "@/lib/pdf-generator";
 import { InvoiceWithDetails } from "@shared/schema";
@@ -56,32 +56,7 @@ export default function Billing() {
     setShowEditInvoice(true);
   };
 
-  const updateRoomChargesMutation = useMutation({
-    mutationFn: async () => {
-      // For now, just process all room charges - this will update all occupied rooms
-      const response = await apiRequest("POST", `/api/rooms/process-daily-charges`);
-      return await response.json();
-    },
-    onSuccess: (data: { processed: number; totalCharges: number }) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      toast({
-        title: "Room Charges Updated",
-        description: `Updated charges for ${data.processed} room(s) with total of ${formatCurrency(data.totalCharges.toString())}`,
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update room charges",
-        variant: "destructive",
-      });
-    },
-  });
 
-  const handleUpdateRoomCharges = (invoice: InvoiceWithDetails) => {
-    updateRoomChargesMutation.mutate();
-  };
 
   const getInvoiceStatus = (invoice: InvoiceWithDetails) => {
     if (invoice.outstandingAmount <= 0) return "paid";
@@ -261,17 +236,7 @@ export default function Billing() {
                               >
                                 <Edit size={16} />
                               </Button>
-                              {invoice.description?.includes('Room assignment') && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleUpdateRoomCharges(invoice)}
-                                  className="text-purple-600 hover:text-purple-700"
-                                  title="Update Room Charges"
-                                >
-                                  <Clock size={16} />
-                                </Button>
-                              )}
+
                               <Button
                                 variant="ghost"
                                 size="icon"
