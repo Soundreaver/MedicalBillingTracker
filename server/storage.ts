@@ -505,26 +505,37 @@ export class DatabaseStorage implements IStorage {
   async processDailyRoomCharges(): Promise<{ processed: number; totalCharges: number }> {
     // Get all occupied rooms
     const occupiedRooms = await db.select().from(rooms).where(eq(rooms.isOccupied, true));
+    console.log(`Found ${occupiedRooms.length} occupied rooms`);
     
     let processedCount = 0;
     let totalCharges = 0;
     
     for (const room of occupiedRooms) {
-      if (!room.currentPatientId || !room.checkInDate) continue;
+      console.log(`Room ${room.roomNumber}: patientId=${room.currentPatientId}, checkInDate=${room.checkInDate}`);
+      if (!room.currentPatientId || !room.checkInDate) {
+        console.log(`Skipping room ${room.roomNumber} - missing patient or check-in date`);
+        continue;
+      }
       
       const result = await this.updateRoomCharges(room.id);
       if (result) {
         processedCount++;
         totalCharges += result.charges;
+        console.log(`Processed room ${room.roomNumber} with charges: ${result.charges}`);
+      } else {
+        console.log(`No charges processed for room ${room.roomNumber}`);
       }
     }
     
+    console.log(`Total processed: ${processedCount}, total charges: ${totalCharges}`);
     return { processed: processedCount, totalCharges };
   }
 
   async updateRoomCharges(roomId: number): Promise<{ charges: number } | null> {
     const [room] = await db.select().from(rooms).where(eq(rooms.id, roomId));
     if (!room || !room.isOccupied || !room.currentPatientId || !room.checkInDate) return null;
+    
+    console.log(`Processing room ${room.roomNumber} for patient ${room.currentPatientId}`);
     
     // Calculate days since check-in
     const checkInDate = new Date(room.checkInDate);
@@ -545,6 +556,8 @@ export class DatabaseStorage implements IStorage {
         )
       );
     
+    console.log(`Found ${roomInvoices.length} invoices by description`);
+    
     // If no invoices found by description, look for invoices with room items for this room
     if (roomInvoices.length === 0) {
       roomInvoices = await db.select()
@@ -558,9 +571,14 @@ export class DatabaseStorage implements IStorage {
           )
         )
         .then(results => results.map(result => result.invoices));
+      
+      console.log(`Found ${roomInvoices.length} invoices by room items`);
     }
     
-    if (roomInvoices.length === 0) return null;
+    if (roomInvoices.length === 0) {
+      console.log(`No invoices found for room ${room.roomNumber}`);
+      return null;
+    }
     
     // Use the most recent room assignment invoice
     const invoice = roomInvoices[roomInvoices.length - 1];
