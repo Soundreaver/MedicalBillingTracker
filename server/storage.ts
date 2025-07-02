@@ -505,15 +505,12 @@ export class DatabaseStorage implements IStorage {
   async processDailyRoomCharges(): Promise<{ processed: number; totalCharges: number }> {
     // Get all occupied rooms
     const occupiedRooms = await db.select().from(rooms).where(eq(rooms.isOccupied, true));
-    console.log(`Found ${occupiedRooms.length} occupied rooms`);
     
     let processedCount = 0;
     let totalCharges = 0;
     
     for (const room of occupiedRooms) {
-      console.log(`Room ${room.roomNumber}: patientId=${room.currentPatientId}, checkInDate=${room.checkInDate}`);
       if (!room.currentPatientId || !room.checkInDate) {
-        console.log(`Skipping room ${room.roomNumber} - missing patient or check-in date`);
         continue;
       }
       
@@ -521,13 +518,9 @@ export class DatabaseStorage implements IStorage {
       if (result) {
         processedCount++;
         totalCharges += result.charges;
-        console.log(`Processed room ${room.roomNumber} with charges: ${result.charges}`);
-      } else {
-        console.log(`No charges processed for room ${room.roomNumber}`);
       }
     }
     
-    console.log(`Total processed: ${processedCount}, total charges: ${totalCharges}`);
     return { processed: processedCount, totalCharges };
   }
 
@@ -535,17 +528,13 @@ export class DatabaseStorage implements IStorage {
     const [room] = await db.select().from(rooms).where(eq(rooms.id, roomId));
     if (!room || !room.isOccupied || !room.currentPatientId || !room.checkInDate) return null;
     
-    console.log(`Processing room ${room.roomNumber} for patient ${room.currentPatientId}`);
-    
     // Calculate days since check-in
     const checkInDate = new Date(room.checkInDate);
     const now = new Date();
     const daysDiff = Math.floor((now.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
     
-    console.log(`Check-in: ${checkInDate.toISOString()}, Now: ${now.toISOString()}, Days diff: ${daysDiff}`);
-    
-    // For testing: process even same-day assignments (minimum 1 day charge)
-    const chargeDays = Math.max(1, daysDiff + 1); // Add 1 to include the current day
+    // Calculate charge days (minimum 1 day, including current day)
+    const chargeDays = Math.max(1, daysDiff + 1);
     
     // Find the room assignment invoice for this patient and room
     // First try to find by description patterns
@@ -557,8 +546,6 @@ export class DatabaseStorage implements IStorage {
           like(invoices.description, `%Room assignment: ${room.roomNumber}%`)
         )
       );
-    
-    console.log(`Found ${roomInvoices.length} invoices by description`);
     
     // If no invoices found by description, look for invoices with room items for this room
     if (roomInvoices.length === 0) {
@@ -573,25 +560,16 @@ export class DatabaseStorage implements IStorage {
           )
         )
         .then(results => results.map(result => result.invoices));
-      
-      console.log(`Found ${roomInvoices.length} invoices by room items`);
     }
     
-    if (roomInvoices.length === 0) {
-      console.log(`No invoices found for room ${room.roomNumber}`);
-      return null;
-    }
-    
-    console.log(`Found ${roomInvoices.length} invoices, processing most recent one`);
+    if (roomInvoices.length === 0) return null;
     
     // Use the most recent room assignment invoice
     const invoice = roomInvoices[roomInvoices.length - 1];
-    console.log(`Using invoice ${invoice.id} with description: ${invoice.description}`);
     
     // Calculate total room charges that should be on the invoice
     const dailyRate = parseFloat(room.dailyRate);
     const totalRoomCharges = dailyRate * chargeDays;
-    console.log(`Daily rate: ${dailyRate}, charge days: ${chargeDays}, total room charges: ${totalRoomCharges}`);
     
     // Get current room item from invoice
     const roomItems = await db.select().from(invoiceItems)
@@ -602,21 +580,13 @@ export class DatabaseStorage implements IStorage {
         )
       );
     
-    console.log(`Found ${roomItems.length} room items in invoice`);
-    if (roomItems.length === 0) {
-      console.log('No room item found in invoice');
-      return null; // No room item found
-    }
+    if (roomItems.length === 0) return null; // No room item found
     
     const currentRoomItem = roomItems[0];
     const currentRoomCharges = parseFloat(currentRoomItem.totalPrice);
-    console.log(`Current room charges: ${currentRoomCharges}, new total room charges: ${totalRoomCharges}`);
     
     // Only update if room charges have changed
-    if (currentRoomCharges === totalRoomCharges) {
-      console.log('Room charges unchanged, skipping update');
-      return null;
-    }
+    if (currentRoomCharges === totalRoomCharges) return null;
     
     // Update room item with new charges
     await db.update(invoiceItems)

@@ -163,6 +163,7 @@ The system uses a PostgreSQL database with the following main entities:
 - June 30, 2025. Fixed Payment Summary display in invoice modal to show correct subtotal, service charge breakdown, and total amount instead of incorrectly displaying total as subtotal
 - June 30, 2025. Fixed server-side invoice calculation override issue - server now respects client-calculated amounts instead of overriding with incorrect server calculations
 - June 30, 2025. CRITICAL FIX: Identified and resolved updateRoomCharges method overriding invoice totals with only room charges, ignoring admission fees and service charges. Now properly updates room items and recalculates full invoice totals maintaining all charges.
+- July 2, 2025. COMPLETED: Fixed daily room charge accumulation system - charges now properly accumulate over multiple days. Fixed invoice search logic to find correct invoices and improved date calculation. Removed manual "Process Daily Charges" button as requested, system now works fully automatically.
 
 ## User Preferences
 
