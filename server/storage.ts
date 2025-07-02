@@ -12,7 +12,7 @@ import {
   type InvoiceWithDetails, type DashboardStats, type RoomOccupancy
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, sql, lt, and, like } from "drizzle-orm";
+import { eq, sql, lt, and, like, or } from "drizzle-orm";
 
 // Simple currency formatter for server-side use
 function formatCurrency(amount: number | string): string {
@@ -535,7 +535,8 @@ export class DatabaseStorage implements IStorage {
     const chargeDays = Math.max(1, daysDiff);
     
     // Find the room assignment invoice for this patient and room
-    const roomInvoices = await db.select()
+    // First try to find by description patterns
+    let roomInvoices = await db.select()
       .from(invoices)
       .where(
         and(
@@ -543,6 +544,21 @@ export class DatabaseStorage implements IStorage {
           like(invoices.description, `%Room assignment: ${room.roomNumber}%`)
         )
       );
+    
+    // If no invoices found by description, look for invoices with room items for this room
+    if (roomInvoices.length === 0) {
+      roomInvoices = await db.select()
+        .from(invoices)
+        .innerJoin(invoiceItems, eq(invoices.id, invoiceItems.invoiceId))
+        .where(
+          and(
+            eq(invoices.patientId, room.currentPatientId),
+            eq(invoiceItems.itemType, 'room'),
+            eq(invoiceItems.itemId, room.id)
+          )
+        )
+        .then(results => results.map(result => result.invoices));
+    }
     
     if (roomInvoices.length === 0) return null;
     
