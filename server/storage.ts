@@ -580,12 +580,16 @@ export class DatabaseStorage implements IStorage {
       return null;
     }
     
+    console.log(`Found ${roomInvoices.length} invoices, processing most recent one`);
+    
     // Use the most recent room assignment invoice
     const invoice = roomInvoices[roomInvoices.length - 1];
+    console.log(`Using invoice ${invoice.id} with description: ${invoice.description}`);
     
     // Calculate total room charges that should be on the invoice
     const dailyRate = parseFloat(room.dailyRate);
     const totalRoomCharges = dailyRate * chargeDays;
+    console.log(`Daily rate: ${dailyRate}, charge days: ${chargeDays}, total room charges: ${totalRoomCharges}`);
     
     // Get current room item from invoice
     const roomItems = await db.select().from(invoiceItems)
@@ -596,13 +600,21 @@ export class DatabaseStorage implements IStorage {
         )
       );
     
-    if (roomItems.length === 0) return null; // No room item found
+    console.log(`Found ${roomItems.length} room items in invoice`);
+    if (roomItems.length === 0) {
+      console.log('No room item found in invoice');
+      return null; // No room item found
+    }
     
     const currentRoomItem = roomItems[0];
     const currentRoomCharges = parseFloat(currentRoomItem.totalPrice);
+    console.log(`Current room charges: ${currentRoomCharges}, new total room charges: ${totalRoomCharges}`);
     
     // Only update if room charges have changed
-    if (currentRoomCharges === totalRoomCharges) return null;
+    if (currentRoomCharges === totalRoomCharges) {
+      console.log('Room charges unchanged, skipping update');
+      return null;
+    }
     
     // Update room item with new charges
     await db.update(invoiceItems)
