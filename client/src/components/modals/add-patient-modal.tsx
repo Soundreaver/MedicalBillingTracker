@@ -17,7 +17,7 @@ interface AddPatientModalProps {
   onClose: () => void;
 }
 
-type AddPatientFormData = typeof insertPatientSchema._output;
+type AddPatientFormData = InsertPatient;
 
 export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProps) {
   const { toast } = useToast();
@@ -30,9 +30,6 @@ export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProp
       phone: "",
       email: "",
       address: "",
-      dateOfBirth: new Date(),
-      gender: "other",
-      emergencyContact: "",
     },
   });
 
@@ -70,9 +67,6 @@ export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProp
       phone: "",
       email: "",
       address: "",
-      dateOfBirth: new Date(),
-      gender: "other",
-      emergencyContact: "",
     });
     onClose();
   };
@@ -126,9 +120,9 @@ export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProp
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone Number *</FormLabel>
+                    <FormLabel>Phone Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="01XXXXXXXXX" {...field} />
+                      <Input placeholder="01XXXXXXXXX" {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -145,64 +139,6 @@ export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProp
                       <Input 
                         type="email" 
                         placeholder="patient@example.com" 
-                        {...field} 
-                        value={field.value || ""} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="dateOfBirth"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date of Birth *</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="date"
-                        {...field}
-                        value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
-                        onChange={(e) => field.onChange(new Date(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="gender"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Gender *</FormLabel>
-                    <FormControl>
-                      <select 
-                        {...field} 
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
-                      </select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="emergencyContact"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Emergency Contact</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Emergency contact number" 
                         {...field} 
                         value={field.value || ""} 
                       />

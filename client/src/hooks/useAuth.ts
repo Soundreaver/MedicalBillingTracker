@@ -12,17 +12,15 @@ export function useAuth() {
     staleTime: 5 * 60 * 1000, // 5 minutes
     queryFn: async () => {
       try {
-        const response = await fetch("/api/auth/me", {
-          credentials: "include",
-        });
-        if (response.status === 401) {
+        // Use apiRequest to ensure the correct base URL is used
+        const response = await apiRequest("GET", "/api/auth/me");
+        return await response.json();
+      } catch (error: any) {
+        // If the error is a 401, it's an expected "not logged in" state
+        if (error.message.includes("401")) {
           return null;
         }
-        if (!response.ok) {
-          throw new Error(`${response.status}: ${response.statusText}`);
-        }
-        return await response.json();
-      } catch (error) {
+        // For other errors, log them
         console.error("Auth check failed:", error);
         return null;
       }

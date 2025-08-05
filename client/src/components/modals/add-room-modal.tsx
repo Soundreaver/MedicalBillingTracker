@@ -3,7 +3,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertRoomSchema, type InsertRoom } from "@shared/schema";
@@ -15,7 +14,7 @@ interface AddRoomModalProps {
   onClose: () => void;
 }
 
-type AddRoomFormData = typeof insertRoomSchema._output;
+type AddRoomFormData = InsertRoom;
 
 export default function AddRoomModal({ isOpen, onClose }: AddRoomModalProps) {
   const { toast } = useToast();
@@ -24,25 +23,22 @@ export default function AddRoomModal({ isOpen, onClose }: AddRoomModalProps) {
     resolver: zodResolver(insertRoomSchema),
     defaultValues: {
       roomNumber: "",
-      roomType: "General Ward",
-      capacity: 1,
+      roomType: "General",
       dailyRate: "0",
       isOccupied: false,
-      patientId: null,
+      currentPatientId: null,
+      checkInDate: null,
+      currentInvoiceId: null,
     },
   });
 
   const createRoomMutation = useMutation({
     mutationFn: async (data: AddRoomFormData) => {
-      const response = await apiRequest("POST", "/api/rooms", {
-        ...data,
-        dailyRate: parseFloat(data.dailyRate),
-      });
+      const response = await apiRequest("POST", "/api/rooms", data);
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/rooms"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/rooms/occupancy"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       toast({
         title: "Success",
@@ -66,30 +62,31 @@ export default function AddRoomModal({ isOpen, onClose }: AddRoomModalProps) {
   const handleClose = () => {
     form.reset({
       roomNumber: "",
-      roomType: "General Ward",
-      capacity: 1,
+      roomType: "General",
       dailyRate: "0",
       isOccupied: false,
-      patientId: null,
+      currentPatientId: null,
+      checkInDate: null,
+      currentInvoiceId: null,
     });
     onClose();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="border-b pb-4">
           <div>
             <DialogTitle className="text-xl font-bold text-professional-dark">
               Add New Room
             </DialogTitle>
-            <p className="text-gray-600 mt-1">Add a room to the hospital inventory</p>
+            <p className="text-gray-600 mt-1">Add a new room to the system</p>
           </div>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
                 name="roomNumber"
@@ -97,7 +94,7 @@ export default function AddRoomModal({ isOpen, onClose }: AddRoomModalProps) {
                   <FormItem>
                     <FormLabel>Room Number *</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., 101, A-12" {...field} />
+                      <Input placeholder="Enter room number" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -110,40 +107,17 @@ export default function AddRoomModal({ isOpen, onClose }: AddRoomModalProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Room Type *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select room type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="General Ward">General Ward</SelectItem>
-                        <SelectItem value="Private Room">Private Room</SelectItem>
-                        <SelectItem value="ICU">ICU</SelectItem>
-                        <SelectItem value="Emergency">Emergency</SelectItem>
-                        <SelectItem value="Operating Room">Operating Room</SelectItem>
-                        <SelectItem value="Maternity">Maternity</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="capacity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Capacity *</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="Number of beds" 
-                        {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
-                        min="1"
-                      />
+                      <select 
+                        {...field} 
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="General">General</option>
+                        <option value="ICU">ICU</option>
+                        <option value="Private">Private</option>
+                        <option value="Emergency">Emergency</option>
+                        <option value="Surgery">Surgery</option>
+                      </select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -155,14 +129,14 @@ export default function AddRoomModal({ isOpen, onClose }: AddRoomModalProps) {
                 name="dailyRate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Daily Rate (BDT) *</FormLabel>
+                    <FormLabel>Daily Rate *</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="0.00" 
+                      <Input
+                        type="number"
                         step="0.01"
                         min="0"
-                        {...field} 
+                        placeholder="Enter daily rate"
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />

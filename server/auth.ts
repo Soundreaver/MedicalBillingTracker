@@ -1,15 +1,18 @@
-import crypto from "crypto";
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { users, sessions, type User, type Session } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gt, lt } from "drizzle-orm";
+import { eq, and, gt, lt, or } from "drizzle-orm";
 
-// Simple password hashing (in production, use bcrypt)
-export function hashPassword(password: string): string {
-  return crypto.createHash('sha256').update(password + 'salt').digest('hex');
+const SALT_ROUNDS = 10;
+
+// --- Secure Password Hashing with bcryptjs ---
+export async function hashPassword(password: string): Promise<string> {
+  return await bcrypt.hash(password, SALT_ROUNDS);
 }
 
-export function verifyPassword(password: string, hash: string): boolean {
-  return hashPassword(password) === hash;
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return await bcrypt.compare(password, hash);
 }
 
 // Generate session ID
@@ -18,32 +21,41 @@ export function generateSessionId(): string {
 }
 
 export class AuthService {
-  // Create default users
+  // Create default users if they don't exist
   async seedUsers() {
-    const existingUsers = await db.select().from(users).limit(1);
-    if (existingUsers.length > 0) return;
+    const existingUsers = await db.select({ username: users.username })
+      .from(users)
+      .where(or(eq(users.username, 'admin'), eq(users.username, 'dr.sharmin')));
 
-    // Create admin user
-    await db.insert(users).values({
-      username: "admin",
-      email: "admin@hospital.com",
-      passwordHash: hashPassword("admin123"),
-      role: "admin",
-      firstName: "System",
-      lastName: "Administrator",
-      isActive: true,
-    });
+    const existingUsernames = existingUsers.map(u => u.username);
 
-    // Create doctor user
-    await db.insert(users).values({
-      username: "dr.sharmin",
-      email: "sharmin@hospital.com",
-      passwordHash: hashPassword("doctor123"),
-      role: "doctor",
-      firstName: "Dr. Sharmin",
-      lastName: "Afroze",
-      isActive: true,
-    });
+    // Create admin user if it doesn't exist
+    if (!existingUsernames.includes('admin')) {
+      await db.insert(users).values({
+        username: "admin",
+        email: "admin@hospital.com",
+        passwordHash: await hashPassword("admin123"),
+        role: "admin",
+        firstName: "System",
+        lastName: "Administrator",
+        isActive: true,
+      });
+      console.log('✅ Default admin user created.');
+    }
+
+    // Create doctor user if it doesn't exist
+    if (!existingUsernames.includes('dr.sharmin')) {
+      await db.insert(users).values({
+        username: "dr.sharmin",
+        email: "sharmin@hospital.com",
+        passwordHash: await hashPassword("doctor123"),
+        role: "doctor",
+        firstName: "Dr. Sharmin",
+        lastName: "Afroze",
+        isActive: true,
+      });
+      console.log('✅ Default doctor user created.');
+    }
   }
 
   // Authenticate user
@@ -54,7 +66,8 @@ export class AuthService {
       return null;
     }
 
-    if (verifyPassword(password, user.passwordHash)) {
+    const passwordMatches = await verifyPassword(password, user.passwordHash);
+    if (passwordMatches) {
       return user;
     }
 
@@ -69,13 +82,16 @@ export class AuthService {
     // Clean up expired sessions for this user
     await this.cleanupExpiredSessions(userId);
 
-    const [session] = await db.insert(sessions).values({
+    const newSession = {
       id: sessionId,
       userId,
       expiresAt,
-    }).returning();
+      createdAt: new Date(),
+    };
 
-    return session;
+    await db.insert(sessions).values(newSession);
+
+    return newSession;
   }
 
   // Get session
@@ -140,14 +156,15 @@ export class AuthService {
     const user = await this.getUser(userId);
     if (!user) return false;
 
-    if (!verifyPassword(currentPassword, user.passwordHash)) {
+    const passwordMatches = await verifyPassword(currentPassword, user.passwordHash);
+    if (!passwordMatches) {
       return false;
     }
 
     await db
       .update(users)
       .set({ 
-        passwordHash: hashPassword(newPassword),
+        passwordHash: await hashPassword(newPassword),
         updatedAt: new Date() 
       })
       .where(eq(users.id, userId));

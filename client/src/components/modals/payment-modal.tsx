@@ -211,8 +211,9 @@ export default function PaymentModal({ invoice, isOpen, onClose, onPaymentSucces
                     <FormLabel>Reference Number</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Transaction reference, check number, etc."
+                        placeholder="Transaction reference"
                         {...field}
+                        value={field.value || ""}
                       />
                     </FormControl>
                     <FormMessage />
@@ -230,6 +231,7 @@ export default function PaymentModal({ invoice, isOpen, onClose, onPaymentSucces
                       <Textarea
                         placeholder="Additional notes about the payment..."
                         {...field}
+                        value={field.value || ""}
                       />
                     </FormControl>
                     <FormMessage />
